@@ -3,1184 +3,689 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>PowerDirect – Direct Meter Credit</title>
+<title>PowerDirect</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-  /* ── Reset & Variables ─────────────────────────────────────────── */
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  :root{
-    --bg:#07090a; --surface:#0d1117; --surface2:#111820;
-    --border:#162030; --border2:#1e2e40;
-    --green:#00e87a; --green-dim:rgba(0,232,122,.12);
-    --amber:#f5c842; --amber-dim:rgba(245,200,66,.1);
-    --red:#ff4d4d; --red-dim:rgba(255,77,77,.1);
-    --blue:#38bdf8;
-    --text:#cddde8; --text2:#6a8fa8; --text3:#2a4050;
-    --font-ui:'Syne',sans-serif;
-    --font-mono:'DM Mono','Share Tech Mono',monospace;
-    --font-meter:'Share Tech Mono',monospace;
-    --radius:14px; --radius-sm:8px;
-  }
-  html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font-ui);-webkit-font-smoothing:antialiased}
-  input,button,select{font-family:inherit}
-  button{cursor:pointer;border:none;background:none}
-  input{outline:none;border:none;background:none;color:inherit}
-  a{color:inherit;text-decoration:none}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f6f9;--white:#fff;--border:#e5e7eb;--border2:#d1d5db;
+  --primary:#1a6b3c;--primary-light:#e8f5ee;--primary-mid:#2d8a52;
+  --accent:#f5a623;--red:#dc2626;--red-light:#fef2f2;
+  --text:#111827;--text2:#4b5563;--text3:#9ca3af;
+  --shadow:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08);--shadow-lg:0 8px 32px rgba(0,0,0,.12);
+  --r:12px;--r-sm:8px;--font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased}
+input,button,select{font-family:inherit}
+button{cursor:pointer;border:none;background:none}
+input,select{outline:none;border:none;background:none;color:inherit}
+.screen{display:none;min-height:100vh;flex-direction:column;animation:fadeUp .2s ease}
+.screen.active{display:flex}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 
-  /* ── Layout ────────────────────────────────────────────────────── */
-  #app{min-height:100vh;display:flex;flex-direction:column}
-  .screen{display:none;flex:1;flex-direction:column;animation:fadeIn .25s ease}
-  .screen.active{display:flex}
-  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+/* nav */
+.nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:54px;position:sticky;top:0;z-index:100}
+.nav-logo{display:flex;align-items:center;gap:8px}
+.logo-box{width:30px;height:30px;border-radius:7px;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:15px}
+.logo-text{font-weight:800;font-size:15px;letter-spacing:-.02em}
+.logo-text span{color:var(--primary)}
+.nav-links{display:flex;gap:2px}
+.nlink{padding:5px 11px;border-radius:6px;font-size:13px;font-weight:500;color:var(--text2);transition:all .15s}
+.nlink:hover{background:var(--bg);color:var(--text)}
+.nlink.on{background:var(--primary-light);color:var(--primary);font-weight:600}
 
-  /* ── Topbar ────────────────────────────────────────────────────── */
-  .topbar{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:14px 20px;
-    background:var(--surface);
-    border-bottom:1px solid var(--border);
-    position:sticky;top:0;z-index:100;
-    backdrop-filter:blur(10px);
-  }
-  .topbar-logo{
-    font-family:var(--font-ui);font-weight:800;font-size:17px;
-    background:linear-gradient(90deg,var(--green),var(--amber));
-    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-    letter-spacing:-.02em;
-  }
-  .topbar-sub{font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:1px}
-  .topbar-nav{display:flex;gap:6px}
-  .nav-btn{
-    padding:6px 12px;border-radius:20px;
-    font-size:11px;font-weight:600;letter-spacing:.03em;
-    color:var(--text2);border:1px solid var(--border2);
-    transition:all .2s;
-  }
-  .nav-btn:hover{color:var(--text);border-color:var(--border2)}
-  .nav-btn.active{background:var(--green-dim);color:var(--green);border-color:var(--green)}
+/* page containers */
+.page{flex:1;padding:20px;max-width:460px;margin:0 auto;width:100%}
+.page-wide{flex:1;padding:20px;max-width:900px;margin:0 auto;width:100%}
 
-  /* ── Cards ─────────────────────────────────────────────────────── */
-  .card{
-    background:var(--surface);border:1px solid var(--border);
-    border-radius:var(--radius);padding:20px;
-  }
-  .card-sm{padding:14px 16px}
+/* cards */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:var(--shadow)}
 
-  /* ── Badges ────────────────────────────────────────────────────── */
-  .badge{
-    display:inline-flex;align-items:center;gap:5px;
-    padding:3px 9px;border-radius:20px;font-size:10px;
-    font-family:var(--font-mono);font-weight:500;letter-spacing:.05em;
-  }
-  .badge-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(0,232,122,.25)}
-  .badge-amber{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,200,66,.25)}
-  .badge-red{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,77,77,.25)}
-  .badge-dot::before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;animation:pulse 2s infinite}
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:12px 18px;border-radius:var(--r-sm);font-size:13px;font-weight:600;transition:all .15s;border:1.5px solid transparent;cursor:pointer}
+.btn-p{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn-p:hover{background:#155c34;box-shadow:0 4px 12px rgba(26,107,60,.28)}
+.btn-o{background:transparent;color:var(--primary);border-color:var(--primary)}
+.btn-o:hover{background:var(--primary-light)}
+.btn-g{background:transparent;color:var(--text2);border-color:var(--border2)}
+.btn-g:hover{background:var(--bg)}
+.btn-full{width:100%}
+.btn-sm{padding:7px 13px;font-size:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:active{transform:scale(.98)}
 
-  /* ── Buttons ───────────────────────────────────────────────────── */
-  .btn{
-    display:flex;align-items:center;justify-content:center;gap:8px;
-    padding:12px 20px;border-radius:var(--radius-sm);
-    font-weight:700;font-size:13px;letter-spacing:.03em;
-    transition:all .2s;
-  }
-  .btn-primary{
-    background:linear-gradient(135deg,rgba(0,232,122,.2),rgba(0,232,122,.08));
-    border:1px solid var(--green);color:var(--green);
-  }
-  .btn-primary:hover{background:rgba(0,232,122,.25);box-shadow:0 0 20px rgba(0,232,122,.15)}
-  .btn-secondary{background:var(--surface2);border:1px solid var(--border2);color:var(--text2)}
-  .btn-secondary:hover{border-color:var(--text2);color:var(--text)}
-  .btn-danger{background:var(--red-dim);border:1px solid rgba(255,77,77,.3);color:var(--red)}
-  .btn-full{width:100%}
-  .btn:disabled{opacity:.4;cursor:not-allowed}
+/* form */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px;letter-spacing:.03em}
+.field input,.field select{width:100%;padding:11px 13px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-size:14px;transition:border-color .15s,box-shadow .15s}
+.field input:focus,.field select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,107,60,.1);background:var(--white)}
+.field input::placeholder{color:var(--text3)}
+.field select option{background:var(--white)}
+.hint{font-size:11px;color:var(--text3);margin-top:4px}
 
-  /* ── Form ──────────────────────────────────────────────────────── */
-  .field{margin-bottom:16px}
-  .field label{display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase}
-  .field input,.field select{
-    width:100%;padding:11px 14px;
-    background:var(--bg);border:1.5px solid var(--border2);
-    border-radius:var(--radius-sm);color:var(--text);font-size:14px;
-    transition:border-color .2s;
-  }
-  .field input:focus,.field select:focus{border-color:var(--green)}
-  .field input::placeholder{color:var(--text3)}
-  .field select option{background:var(--surface)}
+/* badges */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+.bg-green{background:#dcfce7;color:#15803d}
+.bg-amber{background:#fef3c7;color:#92400e}
+.bg-red{background:#fee2e2;color:#dc2626}
+.bg-gray{background:var(--bg);color:var(--text3)}
+.bg-gray::before{display:none}
 
-  /* ── USSD Phone ─────────────────────────────────────────────────── */
-  .phone-wrap{
-    display:flex;flex-direction:column;align-items:center;
-    padding:24px 20px;gap:20px;
-  }
-  .phone{
-    width:240px;
-    background:linear-gradient(160deg,#141824,#0c1018);
-    border-radius:30px;border:2px solid #1e2840;
-    box-shadow:0 24px 60px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.04);
-    padding:16px 14px 18px;
-    position:relative;
-  }
-  .phone-notch{
-    width:70px;height:9px;border-radius:5px;
-    background:#0a0d14;margin:0 auto 12px;
-    border:1px solid #1e2840;
-  }
-  .phone-screen{
-    background:#060810;border-radius:14px;
-    min-height:220px;padding:12px;
-    position:relative;overflow:hidden;
-  }
-  .phone-statusbar{
-    display:flex;justify-content:space-between;
-    font-family:var(--font-mono);font-size:8px;
-    color:var(--text3);margin-bottom:10px;
-  }
-  .phone-header{
-    font-family:var(--font-mono);font-size:9px;font-weight:500;
-    color:var(--amber);border-bottom:1px solid #0e1a1a;
-    padding-bottom:7px;margin-bottom:10px;
-  }
-  .ussd-line{
-    font-family:var(--font-mono);font-size:10px;
-    line-height:1.8;white-space:pre-line;
-  }
-  .ussd-opt{color:var(--green)}
-  .ussd-body{color:#7aaa8a}
-  .ussd-divider{color:var(--text3)}
-  .ussd-cursor{
-    display:inline-block;width:7px;height:12px;
-    background:var(--green);margin-left:2px;vertical-align:middle;
-    animation:blink 1s step-end infinite;
-  }
-  .ussd-input-line{color:var(--green);font-family:var(--font-mono);font-size:11px;margin-top:8px}
-  .ussd-success{color:var(--green);font-size:10.5px;line-height:1.8}
-  .ussd-processing{text-align:center;padding:20px 0}
-  .spinner{font-size:22px;animation:spin 1s linear infinite;display:inline-block;color:var(--green)}
-  .phone-actions{display:flex;gap:8px;margin-top:12px}
-  .phone-key{
-    flex:1;padding:7px 0;border-radius:8px;font-size:10px;font-weight:700;
-    font-family:var(--font-mono);transition:all .15s;
-  }
-  .phone-key.send{
-    background:var(--green-dim);border:1px solid var(--green);color:var(--green);
-  }
-  .phone-key.clear{
-    background:var(--surface2);border:1px solid var(--border2);color:var(--text2);
-  }
-  .phone-key:hover{filter:brightness(1.2)}
+/* home hero */
+.hero{padding:28px 22px 26px;background:linear-gradient(155deg,#1a6b3c,#0f4228);border-radius:16px;color:#fff;margin-bottom:18px;position:relative;overflow:hidden}
+.hero::after{content:'⚡';position:absolute;right:-8px;top:-14px;font-size:110px;opacity:.06;pointer-events:none}
+.hero-tag{display:inline-block;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.14);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px}
+.hero-title{font-size:24px;font-weight:800;line-height:1.2;margin-bottom:7px;letter-spacing:-.02em}
+.hero-sub{font-size:13px;opacity:.72;line-height:1.65;margin-bottom:22px}
+.dial-btn{display:inline-flex;align-items:center;gap:9px;background:rgba(255,255,255,.94);color:var(--primary);padding:13px 26px;border-radius:var(--r);font-size:17px;font-weight:800;letter-spacing:.04em;transition:all .2s;box-shadow:0 4px 18px rgba(0,0,0,.18);cursor:pointer;border:none;font-family:var(--font)}
+.dial-btn:hover{background:#fff;transform:translateY(-1px);box-shadow:0 6px 22px rgba(0,0,0,.22)}
+.features{display:flex;flex-direction:column;gap:9px}
+.feat{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:13px 15px;display:flex;align-items:center;gap:12px}
+.feat-icon{width:36px;height:36px;border-radius:9px;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.feat-title{font-size:13px;font-weight:600}
+.feat-sub{font-size:12px;color:var(--text2);margin-top:1px}
 
-  /* ── Meter Display ──────────────────────────────────────────────── */
-  .meter-device{
-    background:linear-gradient(160deg,#1a1308,#0d0b05);
-    border-radius:18px;border:2px solid #2a2008;
-    box-shadow:0 20px 60px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,200,0,.04);
-    padding:20px;width:100%;max-width:340px;
-  }
-  .meter-brand{
-    display:flex;justify-content:space-between;align-items:flex-start;
-    margin-bottom:14px;
-  }
-  .meter-brand-text .name{
-    font-family:var(--font-ui);font-size:10px;font-weight:800;
-    color:var(--amber);letter-spacing:.15em;text-transform:uppercase;
-  }
-  .meter-brand-text .sub{font-family:var(--font-mono);font-size:8px;color:#4a3a10}
-  .meter-status-dot{
-    width:10px;height:10px;border-radius:50%;background:#1a3a1a;
-    transition:all .4s;
-  }
-  .meter-status-dot.live{background:var(--green);box-shadow:0 0 10px var(--green)}
-  .meter-lcd{
-    background:#070600;border-radius:10px;
-    border:1px solid #1a1500;
-    padding:14px 12px;margin-bottom:12px;
-    box-shadow:inset 0 2px 8px rgba(0,0,0,.9);
-  }
-  .meter-lcd-label{
-    font-family:var(--font-mono);font-size:8px;
-    color:#3a2d08;letter-spacing:.1em;margin-bottom:4px;
-  }
-  .meter-lcd-value{
-    font-family:var(--font-meter);font-size:38px;
-    color:var(--amber);letter-spacing:.04em;
-    text-shadow:0 0 20px rgba(245,200,66,.5);
-    transition:all .1s;
-  }
-  .meter-lcd-unit{font-family:var(--font-mono);font-size:11px;color:#7a6020}
-  .meter-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-  .meter-stat{
-    background:#070600;border-radius:8px;
-    border:1px solid #1a1500;padding:8px 10px;
-  }
-  .meter-stat-label{font-family:var(--font-mono);font-size:7px;color:#3a2d08;letter-spacing:.08em}
-  .meter-stat-val{font-family:var(--font-mono);font-size:10px;color:#c8a030;margin-top:3px}
-  .meter-statusbar{
-    background:#050400;border-radius:6px;border:1px solid #1a1500;
-    padding:7px 10px;display:flex;align-items:center;gap:7px;
-    transition:all .4s;
-  }
-  .meter-statusbar.receiving{
-    background:rgba(0,232,122,.06);border-color:rgba(0,232,122,.2);
-  }
-  .meter-statusbar-dot{
-    width:7px;height:7px;border-radius:50%;
-    background:#2a2008;transition:all .3s;
-  }
-  .meter-statusbar.receiving .meter-statusbar-dot{
-    background:var(--green);animation:pulse 0.7s infinite;
-  }
-  .meter-statusbar-text{font-family:var(--font-mono);font-size:8px;color:#3a2d08;transition:color .3s}
-  .meter-statusbar.receiving .meter-statusbar-text{color:var(--green)}
-  .meter-credited{
-    margin-top:10px;border-radius:8px;padding:8px 10px;
-    background:rgba(0,232,122,.07);border:1px solid rgba(0,232,122,.15);
-    font-family:var(--font-mono);font-size:9px;color:var(--green);
-    animation:fadeIn .4s ease;
-  }
+/* phone */
+.ussd-page{flex:1;padding:20px;display:flex;flex-direction:column;align-items:center;gap:18px;max-width:360px;margin:0 auto;width:100%}
+.phone{width:100%;background:linear-gradient(160deg,#1c2233,#141820);border-radius:30px;border:2px solid #252b3b;box-shadow:var(--shadow-lg),inset 0 1px 0 rgba(255,255,255,.04);padding:14px 13px 18px}
+.pnotch{width:68px;height:8px;border-radius:4px;background:#0d1018;margin:0 auto 12px;border:1px solid #252b3b}
+.pscreen{background:#090c12;border-radius:14px;min-height:230px;padding:13px 11px}
+.pstatus{display:flex;justify-content:space-between;margin-bottom:10px}
+.pcarrier,.psignal{font-size:9px;font-family:var(--mono);color:#5a6880}
+.pussd-hdr{font-size:9.5px;font-weight:600;color:#f5a623;border-bottom:1px solid #161e2e;padding-bottom:7px;margin-bottom:9px;font-family:var(--mono);letter-spacing:.03em}
+.uline{font-family:var(--mono);font-size:10.5px;line-height:1.9}
+.u-text{color:#7a8fa8}
+.u-opt{color:#4ade80;font-weight:500}
+.u-div{color:#1c2535}
+.u-title{color:#dde6f0;font-weight:600}
+.u-ok{color:#4ade80}
+.u-num{color:#f5a623;font-size:20px;letter-spacing:.08em;display:block;margin:8px 0}
+.u-input-row{display:flex;align-items:center;gap:5px;margin-top:9px;padding-top:7px;border-top:1px solid #161e2e}
+.u-gt{color:#4ade80;font-family:var(--mono);font-size:12px;font-weight:600}
+.u-echo{color:#e0eaf5;font-family:var(--mono);font-size:12px}
+.u-cur{display:inline-block;width:6px;height:12px;background:#4ade80;margin-left:1px;vertical-align:middle;animation:blink 1s step-end infinite}
+.pbtns{display:flex;gap:7px;margin-top:10px}
+.pbtn{flex:1;padding:8px 0;border-radius:9px;font-size:10.5px;font-weight:700;border:1.5px solid;transition:all .15s;font-family:var(--font);cursor:pointer}
+.pbtn-send{background:rgba(74,222,128,.11);border-color:#4ade80;color:#4ade80}
+.pbtn-clear{background:rgba(255,255,255,.03);border-color:#252b3b;color:#5a6880}
+.pbtn:hover{filter:brightness(1.12)}
+.pring-wrap{text-align:center;padding:28px 0}
+.pring{width:38px;height:38px;border-radius:50%;border:3px solid #161e2e;border-top-color:#4ade80;animation:spin .8s linear infinite;margin:0 auto 12px}
 
-  /* ── Admin / Dashboard ──────────────────────────────────────────── */
-  .page-inner{padding:20px;flex:1;overflow-y:auto;max-width:900px;margin:0 auto;width:100%}
-  .section-title{
-    font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
-    color:var(--text3);margin-bottom:12px;
-  }
-  .table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border)}
-  table{width:100%;border-collapse:collapse}
-  th{
-    background:var(--surface);padding:10px 14px;
-    font-size:10px;font-weight:700;letter-spacing:.06em;
-    text-transform:uppercase;color:var(--text3);text-align:left;
-    border-bottom:1px solid var(--border);
-  }
-  td{
-    padding:11px 14px;border-bottom:1px solid var(--border);
-    font-size:12px;vertical-align:middle;
-  }
-  tr:last-child td{border-bottom:none}
-  tr:hover td{background:rgba(255,255,255,.015)}
-  .td-mono{font-family:var(--font-mono);font-size:11px}
-  .td-dim{color:var(--text2)}
+/* ussd input below phone */
+.ussd-inp{width:100%;padding:12px 15px;background:var(--white);border:1.5px solid var(--border2);border-radius:var(--r-sm);color:var(--text);font-size:15px;font-family:var(--mono);letter-spacing:.04em;transition:border-color .15s,box-shadow .15s}
+.ussd-inp:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,107,60,.1)}
+.ussd-inp::placeholder{color:var(--text3);letter-spacing:0;font-family:var(--font)}
 
-  /* ── Stats row ──────────────────────────────────────────────────── */
-  .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
-  .stat-card{
-    background:var(--surface);border:1px solid var(--border);
-    border-radius:var(--radius);padding:16px;
-  }
-  .stat-card-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
-  .stat-card-value{font-family:var(--font-mono);font-size:22px;font-weight:500;color:var(--text)}
-  .stat-card-sub{font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:3px}
+/* syslog */
+.syslog{background:var(--white);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 13px;max-height:100px;overflow-y:auto;width:100%}
+.lr{display:flex;gap:8px;margin-bottom:3px;font-size:10.5px}
+.lt{color:var(--text3);font-family:var(--mono);min-width:54px;flex-shrink:0}
+.lm{color:var(--text2)}
+.lm.g{color:#16803c;font-weight:500}
+.lm.a{color:#92400e}
+.lm.r{color:#dc2626}
 
-  /* ── Log ────────────────────────────────────────────────────────── */
-  .syslog{
-    background:var(--bg);border:1px solid var(--border);
-    border-radius:var(--radius-sm);padding:12px;
-    font-family:var(--font-mono);font-size:10px;
-    max-height:120px;overflow-y:auto;
-  }
-  .log-line{display:flex;gap:10px;margin-bottom:4px;line-height:1.5}
-  .log-time{color:var(--text3);min-width:58px}
-  .log-msg{color:var(--text2)}
-  .log-msg.green{color:var(--green)}
-  .log-msg.amber{color:var(--amber)}
-  .log-msg.red{color:var(--red)}
+/* meter device */
+.meter-dev{background:linear-gradient(145deg,#0e1a0c,#0a1209);border-radius:16px;border:2px solid #192b17;padding:18px;color:#fff;box-shadow:var(--shadow-lg)}
+.mhdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.mbrand{font-size:10px;font-weight:700;color:#4a9a40;letter-spacing:.14em;text-transform:uppercase;font-family:var(--mono)}
+.msub{font-size:8.5px;color:#2a3f28;margin-top:2px;font-family:var(--mono)}
+.mlive{display:flex;align-items:center;gap:5px;font-size:10px;color:#4a9a40;font-family:var(--mono);font-weight:600}
+.mldot{width:7px;height:7px;border-radius:50%;background:#4a9a40;animation:pulse 2s infinite}
+.mldot.off{background:#253520;animation:none}
+.mlcd{background:#050b04;border-radius:9px;border:1px solid #0e1a0c;padding:14px 13px;margin-bottom:12px;box-shadow:inset 0 2px 8px rgba(0,0,0,.6)}
+.mlcd-lbl{font-size:8.5px;color:#263520;letter-spacing:.12em;margin-bottom:5px;font-family:var(--mono)}
+.mval{font-size:40px;font-weight:500;color:#a8e6a0;letter-spacing:.04em;font-family:var(--mono);text-shadow:0 0 18px rgba(168,230,160,.28);transition:all .08s}
+.munit{font-size:13px;color:#4a7a40;margin-left:4px;font-family:var(--mono)}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}
+.mcell{background:#060e05;border-radius:7px;border:1px solid #0e1a0c;padding:7px 9px}
+.mclbl{font-size:8px;color:#263520;letter-spacing:.08em;font-family:var(--mono)}
+.mcval{font-size:10.5px;color:#60a058;margin-top:3px;font-family:var(--mono)}
+.mfoot{display:flex;align-items:center;gap:6px;background:#040903;border-radius:7px;border:1px solid #0e1a0c;padding:7px 10px;font-size:10px;font-family:var(--mono);transition:all .4s}
+.mfoot.ok{color:#4a9a40}
+.mfoot.rx{color:#4ade80;border-color:rgba(74,222,128,.2);background:rgba(74,222,128,.04)}
+.mfdot{width:6px;height:6px;border-radius:50%;background:#1f2e1c;flex-shrink:0}
+.mfoot.rx .mfdot{background:#4ade80;animation:pulse .7s infinite}
+.mcredit{margin-top:9px;padding:8px 11px;border-radius:7px;background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.14);font-size:10.5px;color:#4ade80;font-family:var(--mono);animation:fadeUp .4s ease}
 
-  /* ── Toast ──────────────────────────────────────────────────────── */
-  #toast{
-    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
-    background:var(--surface);border:1px solid var(--border2);
-    border-radius:10px;padding:10px 18px;
-    font-size:12px;font-weight:600;
-    box-shadow:0 8px 30px rgba(0,0,0,.5);
-    transition:transform .3s cubic-bezier(.34,1.56,.64,1);
-    z-index:999;white-space:nowrap;
-  }
-  #toast.show{transform:translateX(-50%) translateY(0)}
-  #toast.success{border-color:rgba(0,232,122,.3);color:var(--green)}
-  #toast.error{border-color:rgba(255,77,77,.3);color:var(--red)}
+/* stats */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+@media(min-width:600px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stat{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:15px}
+.slbl{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.04em;text-transform:uppercase;margin-bottom:5px}
+.sval{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.02em}
+.ssub{font-size:11px;color:var(--text3);margin-top:2px}
 
-  /* ── Loading overlay ────────────────────────────────────────────── */
-  #loader{
-    position:fixed;inset:0;background:var(--bg);z-index:9999;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
-  }
-  .loader-logo{
-    font-family:var(--font-ui);font-weight:800;font-size:28px;
-    background:linear-gradient(90deg,var(--green),var(--amber));
-    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  }
-  .loader-bar{width:120px;height:2px;background:var(--border2);border-radius:1px;overflow:hidden}
-  .loader-fill{height:100%;background:var(--green);animation:loadfill 1.5s ease forwards}
-  @keyframes loadfill{from{width:0}to{width:100%}}
-  .loader-sub{font-family:var(--font-mono);font-size:10px;color:var(--text3)}
+/* table */
+.tcard{background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.tcard-hdr{padding:13px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.tcard-title{font-size:13px;font-weight:700}
+.ox{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{padding:9px 13px;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);text-align:left;background:var(--bg);border-bottom:1px solid var(--border)}
+.tbl td{padding:11px 13px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#fafbfc}
+.mono{font-family:var(--mono);font-size:11.5px}
+.dim{color:var(--text2)}
+.emp{text-align:center;padding:30px 16px;color:var(--text3);font-size:13px}
+.chip{display:inline-block;padding:2px 7px;border-radius:5px;font-family:var(--mono);font-size:11px;background:var(--bg);border:1px solid var(--border2);color:var(--text2)}
 
-  /* ── Misc ───────────────────────────────────────────────────────── */
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-  @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-  @keyframes countUp{from{opacity:.6}to{opacity:1}}
-  .divider{border:none;border-top:1px solid var(--border);margin:16px 0}
-  .row{display:flex;align-items:center;gap:10px}
-  .row-between{display:flex;align-items:center;justify-content:space-between}
-  .gap-12{gap:12px}
-  .mt-8{margin-top:8px}
-  .mt-16{margin-top:16px}
-  .mt-20{margin-top:20px}
-  .mb-16{margin-bottom:16px}
-  .text-green{color:var(--green)}
-  .text-amber{color:var(--amber)}
-  .text-dim{color:var(--text2)}
-  .text-mono{font-family:var(--font-mono)}
-  .text-sm{font-size:11px}
-  .text-xs{font-size:10px}
-  .fw-700{font-weight:700}
-  .empty{text-align:center;padding:40px 20px;color:var(--text3);font-family:var(--font-mono);font-size:11px}
-  .chip{
-    display:inline-block;padding:2px 8px;border-radius:4px;
-    font-family:var(--font-mono);font-size:10px;background:var(--surface2);
-    border:1px solid var(--border2);color:var(--text2);
-  }
-  /* scrollbar */
-  ::-webkit-scrollbar{width:4px;height:4px}
-  ::-webkit-scrollbar-track{background:transparent}
-  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+/* toast */
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(56px);background:var(--text);color:#fff;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:500;white-space:nowrap;box-shadow:var(--shadow-lg);transition:transform .25s cubic-bezier(.34,1.56,.64,1);z-index:9999}
+#toast.show{transform:translateX(-50%) translateY(0)}
+#toast.ok{background:var(--primary)}
+#toast.err{background:var(--red)}
 
-  /* ── Home screen ────────────────────────────────────────────────── */
-  .home-hero{
-    flex:1;display:flex;flex-direction:column;align-items:center;
-    justify-content:center;padding:40px 20px;text-align:center;gap:24px;
-  }
-  .home-tagline{
-    font-size:28px;font-weight:800;line-height:1.2;
-    max-width:300px;
-  }
-  .home-tagline span{
-    background:linear-gradient(90deg,var(--green),var(--amber));
-    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  }
-  .home-desc{font-size:13px;color:var(--text2);max-width:280px;line-height:1.7}
-  .home-dial{
-    background:linear-gradient(135deg,rgba(0,232,122,.18),rgba(245,200,66,.06));
-    border:1.5px solid var(--green);border-radius:var(--radius);
-    padding:18px 32px;
-    font-size:18px;font-weight:800;color:var(--green);
-    letter-spacing:.05em;
-    box-shadow:0 0 30px rgba(0,232,122,.12);
-    transition:all .2s;
-  }
-  .home-dial:hover{box-shadow:0 0 40px rgba(0,232,122,.22);transform:translateY(-1px)}
-  .home-features{
-    display:flex;flex-direction:column;gap:10px;
-    width:100%;max-width:280px;text-align:left;
-  }
-  .home-feature{
-    display:flex;align-items:center;gap:10px;
-    padding:10px 14px;border-radius:var(--radius-sm);
-    background:var(--surface);border:1px solid var(--border);
-    font-size:12px;
-  }
-  .home-feature-icon{font-size:16px;width:28px;text-align:center}
-  .home-feature-text{color:var(--text2)}
+/* loader */
+#loader{position:fixed;inset:0;background:var(--white);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.ll{font-size:26px;font-weight:800;color:var(--primary);letter-spacing:-.02em}
+.lb{width:90px;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.lf{height:100%;background:var(--primary);animation:ldfill 1.3s ease forwards}
+@keyframes ldfill{from{width:0}to{width:100%}}
+.lc{font-size:12px;color:var(--text3)}
 
-  /* ── Responsive ─────────────────────────────────────────────────── */
-  @media(max-width:500px){
-    .topbar{padding:12px 14px}
-    .topbar-logo{font-size:15px}
-    .nav-btn{padding:5px 10px;font-size:10px}
-    .page-inner{padding:14px}
-    .stats-row{grid-template-columns:1fr 1fr}
-  }
+/* misc */
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.mb-12{margin-bottom:12px}.mb-16{margin-bottom:16px}.mb-20{margin-bottom:20px}.mt-6{margin-top:6px}.mt-12{margin-top:12px}
+.row{display:flex;align-items:center}.rb{display:flex;align-items:center;justify-content:space-between}
+.slabel{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:8px}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 </style>
 </head>
 <body>
+
 <div id="loader">
-  <div class="loader-logo">PowerDirect</div>
-  <div class="loader-bar"><div class="loader-fill"></div></div>
-  <div class="loader-sub">Connecting to Firebase…</div>
+  <div class="ll">⚡ PowerDirect</div>
+  <div class="lb"><div class="lf"></div></div>
+  <div class="lc">Loading…</div>
 </div>
 
-<div id="app">
-  <!-- TOPBAR -->
-  <div class="topbar">
-    <div>
-      <div class="topbar-logo">⚡ PowerDirect</div>
-      <div class="topbar-sub">Direct Meter Credit · Rwanda</div>
-    </div>
-    <div class="topbar-nav">
-      <button class="nav-btn active" id="nav-home" onclick="showScreen('home')">Home</button>
-      <button class="nav-btn" id="nav-meter" onclick="showScreen('meter')">Meter</button>
-      <button class="nav-btn" id="nav-admin" onclick="showScreen('admin')">Admin</button>
-    </div>
-  </div>
+<div id="app" style="display:none">
 
-  <!-- ══ HOME SCREEN ════════════════════════════════════════════════ -->
-  <div class="screen active" id="screen-home">
-    <div class="home-hero">
-      <div>
-        <div class="home-tagline">Pay electricity.<br/><span>Meter credits instantly.</span></div>
-        <div class="home-desc mt-8">No token. No keypad. No internet needed.<br/>Just dial and pay — like MoMo.</div>
-      </div>
-      <button class="home-dial" onclick="startUSSD()">Dial *312# →</button>
-      <div class="home-features">
-        <div class="home-feature">
-          <div class="home-feature-icon">⚡</div>
-          <div class="home-feature-text">Credit goes straight to your meter</div>
-        </div>
-        <div class="home-feature">
-          <div class="home-feature-icon">📵</div>
-          <div class="home-feature-text">Works without smartphone or internet</div>
-        </div>
-        <div class="home-feature">
-          <div class="home-feature-icon">⏱️</div>
-          <div class="home-feature-text">Meter updated in under 3 seconds</div>
-        </div>
-        <div class="home-feature">
-          <div class="home-feature-icon">🏠</div>
-          <div class="home-feature-text">Landlords manage multiple meters at once</div>
-        </div>
-      </div>
+<!-- HOME -->
+<div class="screen active" id="screen-home">
+  <nav class="nav">
+    <div class="nav-logo"><div class="logo-box">⚡</div><div class="logo-text">Power<span>Direct</span></div></div>
+    <div class="nav-links">
+      <button class="nlink on">Home</button>
+      <button class="nlink" onclick="goMeter()">Meter</button>
+      <button class="nlink" onclick="goAdmin()">Admin</button>
+    </div>
+  </nav>
+  <div class="page">
+    <div class="hero">
+      <div class="hero-tag">Rwanda · EUCL Network</div>
+      <div class="hero-title">Electricity credit,<br/>straight to your meter.</div>
+      <div class="hero-sub">No token. No keypad entry. Pay once<br/>and your meter updates instantly.</div>
+      <button class="dial-btn" onclick="goUSSD()">📞 Dial *312#</button>
+    </div>
+    <div class="features">
+      <div class="feat"><div class="feat-icon">⚡</div><div><div class="feat-title">Direct to meter</div><div class="feat-sub">Credit arrives in under 3 seconds via fiber</div></div></div>
+      <div class="feat"><div class="feat-icon">📵</div><div><div class="feat-title">No internet required</div><div class="feat-sub">Works on any phone with USSD (*312#)</div></div></div>
+      <div class="feat"><div class="feat-icon">🏠</div><div><div class="feat-title">Multiple meters</div><div class="feat-sub">Landlords can top up all units at once</div></div></div>
+      <div class="feat"><div class="feat-icon">📋</div><div><div class="feat-title">Full history</div><div class="feat-sub">Every transaction logged with reference</div></div></div>
     </div>
   </div>
+</div>
 
-  <!-- ══ USSD SCREEN ════════════════════════════════════════════════ -->
-  <div class="screen" id="screen-ussd">
-    <div class="phone-wrap">
-      <!-- Phone -->
-      <div class="phone">
-        <div class="phone-notch"></div>
-        <div class="phone-screen" id="ussd-screen">
-          <div class="phone-statusbar">
-            <span>MTN RW</span><span>●●●●○ 4G</span>
-          </div>
-          <div class="phone-header" id="ussd-header">*312# · PowerDirect</div>
-          <div id="ussd-body"></div>
-        </div>
-        <div class="phone-actions">
-          <button class="phone-key clear" onclick="ussdClear()">← Clear</button>
-          <button class="phone-key send" id="ussd-send-btn" onclick="ussdSend()">Send →</button>
-        </div>
+<!-- USSD -->
+<div class="screen" id="screen-ussd">
+  <nav class="nav">
+    <div class="nav-logo"><div class="logo-box">⚡</div><div class="logo-text">Power<span>Direct</span></div></div>
+    <button class="nlink" onclick="goHome()">← Home</button>
+  </nav>
+  <div class="ussd-page">
+    <div class="phone">
+      <div class="pnotch"></div>
+      <div class="pscreen">
+        <div class="pstatus"><span class="pcarrier">MTN RW</span><span class="psignal">●●●●○ 4G</span></div>
+        <div class="pussd-hdr">*312# · PowerDirect</div>
+        <div id="ubody"></div>
       </div>
-
-      <!-- Input area -->
-      <div style="width:240px" id="ussd-input-area">
-        <input id="ussd-input" class="field" style="
-          width:100%;padding:11px 14px;
-          background:var(--bg);border:1.5px solid var(--border2);
-          border-radius:var(--radius-sm);color:var(--text);font-size:15px;
-          font-family:var(--font-mono);letter-spacing:.05em;
-        " placeholder="Type here…" autocomplete="off"
-          onkeydown="if(event.key==='Enter') ussdSend()"/>
-        <div class="text-xs text-dim text-mono mt-8" id="ussd-hint"></div>
-      </div>
-
-      <!-- Syslog -->
-      <div style="width:240px">
-        <div class="section-title">Signal Log</div>
-        <div class="syslog" id="syslog">
-          <div class="log-line"><span class="log-time">--:--:--</span><span class="log-msg">Waiting for session…</span></div>
-        </div>
-      </div>
-
-      <!-- Back -->
-      <button class="btn btn-secondary" onclick="showScreen('home')" style="width:240px">← Back to Home</button>
-    </div>
-  </div>
-
-  <!-- ══ METER VIEW SCREEN ══════════════════════════════════════════ -->
-  <div class="screen" id="screen-meter">
-    <div class="page-inner">
-      <div class="row-between mb-16">
-        <div>
-          <div style="font-size:16px;font-weight:800">Meter View</div>
-          <div class="text-sm text-dim">Real-time balance · updates instantly on credit</div>
-        </div>
-      </div>
-
-      <!-- Meter selector -->
-      <div class="card card-sm mb-16">
-        <div class="field" style="margin:0">
-          <label>Select Meter</label>
-          <select id="meter-select" onchange="loadMeter()">
-            <option value="">Loading meters…</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Meter device display -->
-      <div style="display:flex;justify-content:center;margin-bottom:20px">
-        <div id="meter-device-wrap">
-          <div class="meter-device">
-            <div class="meter-brand">
-              <div class="meter-brand-text">
-                <div class="name">EUCL Smart Meter</div>
-                <div class="sub">AMI-FIBER · STS v2.1 · PowerDirect Ready</div>
-              </div>
-              <div class="meter-status-dot" id="meter-dot"></div>
-            </div>
-            <div class="meter-lcd">
-              <div class="meter-lcd-label">AVAILABLE UNITS</div>
-              <div class="meter-lcd-value" id="meter-kwh-display">--.--</div>
-              <div class="meter-lcd-unit">kWh</div>
-            </div>
-            <div class="meter-stats">
-              <div class="meter-stat">
-                <div class="meter-stat-label">METER ID</div>
-                <div class="meter-stat-val" id="meter-id-display">—</div>
-              </div>
-              <div class="meter-stat">
-                <div class="meter-stat-label">EST. VALUE</div>
-                <div class="meter-stat-val" id="meter-rwf-display">—</div>
-              </div>
-              <div class="meter-stat">
-                <div class="meter-stat-label">OWNER</div>
-                <div class="meter-stat-val" id="meter-owner-display">—</div>
-              </div>
-              <div class="meter-stat">
-                <div class="meter-stat-label">LOCATION</div>
-                <div class="meter-stat-val" id="meter-loc-display">—</div>
-              </div>
-            </div>
-            <div class="meter-statusbar" id="meter-statusbar">
-              <div class="meter-statusbar-dot" id="meter-statusbar-dot"></div>
-              <div class="meter-statusbar-text" id="meter-statusbar-text">CONNECTED · FIBER</div>
-            </div>
-            <div id="meter-credited-msg" style="display:none"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Recent transactions for this meter -->
-      <div class="section-title">Recent Credits</div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr>
-            <th>Time</th><th>Amount</th><th>kWh</th><th>Ref</th><th>Status</th>
-          </tr></thead>
-          <tbody id="meter-tx-table"><tr><td colspan="5" class="empty">No transactions yet</td></tr></tbody>
-        </table>
+      <div class="pbtns">
+        <button class="pbtn pbtn-clear" onclick="uClear()">← Clear</button>
+        <button class="pbtn pbtn-send" id="usend" onclick="uSend()">Send →</button>
       </div>
     </div>
-  </div>
 
-  <!-- ══ ADMIN SCREEN ═══════════════════════════════════════════════ -->
-  <div class="screen" id="screen-admin">
-    <div class="page-inner">
-      <div class="row-between mb-16">
-        <div>
-          <div style="font-size:16px;font-weight:800">Admin Dashboard</div>
-          <div class="text-sm text-dim">All meters · All transactions · Live data</div>
-        </div>
-        <button class="btn btn-secondary" style="padding:7px 14px;font-size:11px" onclick="seedMeters()">+ Seed Demo Meters</button>
-      </div>
+    <div style="width:100%" id="uinput-wrap">
+      <input id="uinput" class="ussd-inp" placeholder="Type here…" autocomplete="off"
+        onkeydown="if(event.key==='Enter')uSend()"
+        oninput="const e=document.getElementById('uecho');if(e)e.textContent=this.type==='password'?'●'.repeat(this.value.length):this.value"/>
+      <div class="hint mt-6" id="uhint"></div>
+    </div>
 
-      <!-- Stats -->
-      <div class="stats-row">
-        <div class="stat-card">
-          <div class="stat-card-label">Total Meters</div>
-          <div class="stat-card-value" id="stat-meters">—</div>
-          <div class="stat-card-sub">registered</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-label">Transactions</div>
-          <div class="stat-card-value" id="stat-txns">—</div>
-          <div class="stat-card-sub">all time</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-label">Volume</div>
-          <div class="stat-card-value" id="stat-vol">—</div>
-          <div class="stat-card-sub">RWF processed</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card-label">Success Rate</div>
-          <div class="stat-card-value" id="stat-rate">—</div>
-          <div class="stat-card-sub">of payments</div>
-        </div>
-      </div>
-
-      <!-- Meters table -->
-      <div class="section-title">Meters</div>
-      <div class="table-wrap mb-16">
-        <table>
-          <thead><tr>
-            <th>Meter ID</th><th>Owner</th><th>Location</th>
-            <th>Balance (kWh)</th><th>Balance (RWF)</th><th>Status</th>
-          </tr></thead>
-          <tbody id="admin-meters-table"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
-        </table>
-      </div>
-
-      <!-- Transactions table -->
-      <div class="section-title">All Transactions</div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr>
-            <th>Time</th><th>Meter</th><th>Phone</th>
-            <th>Amount (RWF)</th><th>kWh</th><th>Ref</th><th>Status</th>
-          </tr></thead>
-          <tbody id="admin-tx-table"><tr><td colspan="7" class="empty">No transactions yet</td></tr></tbody>
-        </table>
+    <div style="width:100%">
+      <div class="slabel">Signal log</div>
+      <div class="syslog" id="syslog">
+        <div class="lr"><span class="lt">--:--:--</span><span class="lm">Waiting…</span></div>
       </div>
     </div>
+
+    <button class="btn btn-g btn-full" onclick="goHome()">← Back to Home</button>
   </div>
+</div>
+
+<!-- METER VIEW -->
+<div class="screen" id="screen-meter">
+  <nav class="nav">
+    <div class="nav-logo"><div class="logo-box">⚡</div><div class="logo-text">Power<span>Direct</span></div></div>
+    <div class="nav-links">
+      <button class="nlink" onclick="goHome()">Home</button>
+      <button class="nlink on">Meter</button>
+      <button class="nlink" onclick="goAdmin()">Admin</button>
+    </div>
+  </nav>
+  <div class="page">
+    <div class="card mb-12" style="padding:12px 15px">
+      <div class="field" style="margin:0"><label>Select Meter</label>
+        <select id="msel" onchange="loadMeterView()"><option value="">Loading…</option></select>
+      </div>
+    </div>
+
+    <div class="meter-dev mb-12">
+      <div class="mhdr">
+        <div><div class="mbrand">EUCL Smart Meter</div><div class="msub">AMI-FIBER · STS v2.1 · PowerDirect</div></div>
+        <div class="mlive"><div class="mldot off" id="mldot"></div><span id="mlabel">offline</span></div>
+      </div>
+      <div class="mlcd">
+        <div class="mlcd-lbl">AVAILABLE UNITS</div>
+        <div><span class="mval" id="mkwh">--.--</span><span class="munit">kWh</span></div>
+      </div>
+      <div class="mgrid">
+        <div class="mcell"><div class="mclbl">METER ID</div><div class="mcval" id="mid">—</div></div>
+        <div class="mcell"><div class="mclbl">EST. VALUE</div><div class="mcval" id="mrwf">—</div></div>
+        <div class="mcell"><div class="mclbl">OWNER</div><div class="mcval" id="mowner">—</div></div>
+        <div class="mcell"><div class="mclbl">LOCATION</div><div class="mcval" id="mloc">—</div></div>
+      </div>
+      <div class="mfoot ok" id="mfoot"><div class="mfdot" id="mfdot"></div><span id="mftxt">CONNECTED · FIBER</span></div>
+      <div id="mcredit" style="display:none" class="mcredit"></div>
+    </div>
+
+    <div class="tcard">
+      <div class="tcard-hdr"><div class="tcard-title">Recent Credits</div></div>
+      <div class="ox"><table class="tbl">
+        <thead><tr><th>Time</th><th>Amount</th><th>kWh</th><th>Ref</th><th>Status</th></tr></thead>
+        <tbody id="mtx"><tr><td colspan="5" class="emp">No transactions yet</td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="screen" id="screen-admin">
+  <nav class="nav">
+    <div class="nav-logo"><div class="logo-box">⚡</div><div class="logo-text">Power<span>Direct</span></div></div>
+    <div class="nav-links">
+      <button class="nlink" onclick="goHome()">Home</button>
+      <button class="nlink" onclick="goMeter()">Meter</button>
+      <button class="nlink on">Admin</button>
+    </div>
+  </nav>
+  <div class="page-wide">
+    <div class="rb mb-20">
+      <div><div style="font-size:17px;font-weight:800;letter-spacing:-.02em">Dashboard</div><div style="font-size:13px;color:var(--text2);margin-top:2px">All meters · all transactions · live</div></div>
+      <button class="btn btn-o btn-sm" onclick="seedMeters()">+ Seed demo data</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="slbl">Meters</div><div class="sval" id="sm">—</div><div class="ssub">registered</div></div>
+      <div class="stat"><div class="slbl">Transactions</div><div class="sval" id="stx">—</div><div class="ssub">all time</div></div>
+      <div class="stat"><div class="slbl">Volume</div><div class="sval" id="sv">—</div><div class="ssub">RWF processed</div></div>
+      <div class="stat"><div class="slbl">Success rate</div><div class="sval" id="sr">—</div><div class="ssub">of payments</div></div>
+    </div>
+    <div class="tcard mb-16">
+      <div class="tcard-hdr"><div class="tcard-title">Meters</div></div>
+      <div class="ox"><table class="tbl">
+        <thead><tr><th>Meter ID</th><th>Owner</th><th>Location</th><th>Balance (kWh)</th><th>Value (RWF)</th><th>Status</th></tr></thead>
+        <tbody id="atbl"><tr><td colspan="6" class="emp">Loading…</td></tr></tbody>
+      </table></div>
+    </div>
+    <div class="tcard">
+      <div class="tcard-hdr"><div class="tcard-title">All Transactions</div></div>
+      <div class="ox"><table class="tbl">
+        <thead><tr><th>Time</th><th>Meter</th><th>Phone</th><th>Amount</th><th>kWh</th><th>Ref</th><th>Status</th></tr></thead>
+        <tbody id="ttbl"><tr><td colspan="7" class="emp">No transactions yet</td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+
 </div><!-- #app -->
-
 <div id="toast"></div>
 
-<!-- ══════════════════════════════════════════════════════════════════
-     FIREBASE SDK
-═══════════════════════════════════════════════════════════════════ -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import {
-  getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc,
-  updateDoc, onSnapshot, query, orderBy, where, limit, serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import{getFirestore,collection,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,onSnapshot,query,orderBy,where,limit,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-/* ──────────────────────────────────────────────────────────────────
-   🔧 FIREBASE CONFIG — replace with your project credentials
-   ────────────────────────────────────────────────────────────────── */
-const firebaseConfig = {
-  apiKey:            "REPLACE_WITH_YOUR_API_KEY",
-  authDomain:        "REPLACE.firebaseapp.com",
-  projectId:         "REPLACE_WITH_YOUR_PROJECT_ID",
-  storageBucket:     "REPLACE.appspot.com",
-  messagingSenderId: "REPLACE",
-  appId:             "REPLACE"
-};
+/* ── Firebase config — replace when ready ── */
+const FBC={apiKey:"REPLACE",authDomain:"REPLACE.firebaseapp.com",projectId:"REPLACE",storageBucket:"REPLACE.appspot.com",messagingSenderId:"REPLACE",appId:"REPLACE"};
+const DEMO=true; // set false + fill FBC to use Firebase
 
-/* ──────────────────────────────────────────────────────────────────
-   DEMO MODE — set to true to run without Firebase (in-memory only)
-   ────────────────────────────────────────────────────────────────── */
-const DEMO_MODE = true;
-
-// ── In-memory store for demo mode ──────────────────────────────────
-let demoMeters = {};
-let demoTxns   = [];
-
-const DEMO_SEED = [
-  { id:"04-RWA-2847-K", owner:"Uwimana Jean Pierre", location:"Kimironko, Kigali",    tariff:"Residential A", balance_kwh:4.2  },
-  { id:"07-RWA-1193-N", owner:"Mutesi Annonciata",  location:"Nyamirambo, Kigali",   tariff:"Residential A", balance_kwh:11.8 },
-  { id:"02-RWA-5041-G", owner:"Habimana Eric",      location:"Gikondo, Kigali",      tariff:"Residential B", balance_kwh:0.4  },
-  { id:"11-RWA-3382-M", owner:"Ishimwe Claudette",  location:"Musanze, North",       tariff:"Residential A", balance_kwh:7.1  },
-  { id:"09-RWA-7712-B", owner:"Nkurunziza Patrick", location:"Butare, South",        tariff:"Commercial A",  balance_kwh:22.5 },
+const SEED=[
+  {id:"04-RWA-2847-K",owner:"Uwimana Jean Pierre",location:"Kimironko, Kigali",   tariff:"Residential A",balance_kwh:4.2},
+  {id:"07-RWA-1193-N",owner:"Mutesi Annonciata",  location:"Nyamirambo, Kigali",  tariff:"Residential A",balance_kwh:11.8},
+  {id:"02-RWA-5041-G",owner:"Habimana Eric",       location:"Gikondo, Kigali",     tariff:"Residential B",balance_kwh:0.4},
+  {id:"11-RWA-3382-M",owner:"Ishimwe Claudette",   location:"Musanze, Northern",   tariff:"Residential A",balance_kwh:7.1},
+  {id:"09-RWA-7712-B",owner:"Nkurunziza Patrick",  location:"Butare, Southern",    tariff:"Commercial A",  balance_kwh:22.5},
 ];
+let DM={},DT=[];
+SEED.forEach(m=>{DM[m.id]={...m,balance_rwf:Math.round(m.balance_kwh*450),connected:true}});
 
-function demoInit() {
-  DEMO_SEED.forEach(m => {
-    demoMeters[m.id] = { ...m, balance_rwf: Math.round(m.balance_kwh * 450), connected: true };
-  });
-}
-demoInit();
+let db=null;
+if(!DEMO){const a=initializeApp(FBC);db=getFirestore(a);}
 
-// ── Firebase init (skipped in demo mode) ───────────────────────────
-let db = null;
-if (!DEMO_MODE) {
-  const app = initializeApp(firebaseConfig);
-  db = getFirestore(app);
-}
+const RATE=450,CM="pd_meters",CT="pd_transactions";
+const rwf=n=>Number(n).toLocaleString()+" RWF";
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function mkref(){return"RWA"+Date.now().toString(36).toUpperCase().slice(-8)}
+function tstr(ts){if(!ts)return"—";const d=ts.toDate?ts.toDate():new Date(ts);return d.toLocaleTimeString("en-RW",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}
+function now(){return new Date().toLocaleTimeString("en-RW",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}
 
-// ── Expose globals ──────────────────────────────────────────────────
-window._db   = db;
-window._demo = DEMO_MODE;
+function toast(msg,t="ok"){const el=document.getElementById("toast");el.textContent=msg;el.className="show "+t;setTimeout(()=>el.className="",2600)}
 
-// ── Collection names ────────────────────────────────────────────────
-const C_METERS = "pd_meters";
-const C_TXNS   = "pd_transactions";
-const RATE_RWF_PER_KWH = 450;
-
-/* ══════════════════════════════════════════════════════════════════
-   UTILITIES
-═════════════════════════════════════════════════════════════════════ */
-function fmtRwf(n) { return Number(n).toLocaleString() + " RWF"; }
-function fmtKwh(n) { return Number(n).toFixed(2) + " kWh"; }
-function genRef()  { return "RWA" + Date.now().toString(36).toUpperCase().slice(-8); }
-function ts2str(ts){
-  if (!ts) return "—";
-  const d = ts.toDate ? ts.toDate() : new Date(ts);
-  return d.toLocaleTimeString("en-RW",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
-}
-function now2str(){
-  return new Date().toLocaleTimeString("en-RW",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+function log(msg,c=""){
+  const b=document.getElementById("syslog");if(!b)return;
+  const d=document.createElement("div");d.className="lr";
+  d.innerHTML=`<span class="lt">${now()}</span><span class="lm ${c}">${msg}</span>`;
+  b.appendChild(d);b.scrollTop=b.scrollHeight;
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   SCREEN ROUTING
-═════════════════════════════════════════════════════════════════════ */
-window.showScreen = function(name) {
-  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
-  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
-  document.getElementById("screen-" + name).classList.add("active");
-  document.getElementById("nav-" + name).classList.add("active");
-  if (name === "admin")  loadAdmin();
-  if (name === "meter")  loadMeterSelect();
+/* navigation — no nav-btn IDs needed */
+function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));document.getElementById("screen-"+id).classList.add("active");window.scrollTo(0,0)}
+window.goHome=()=>show("home");
+window.goMeter=()=>{show("meter");loadMeterSel()};
+window.goAdmin=()=>{show("admin");loadAdmin()};
+window.goUSSD=()=>{resetU();show("ussd");setTimeout(()=>step("dial"),180)};
+
+/* ════════════════════ USSD ════════════════════ */
+let U={s:"idle",meter:"",amount:0,pin:"",ref:""};
+
+function resetU(){
+  U={s:"idle",meter:"",amount:0,pin:"",ref:""};
+  const sl=document.getElementById("syslog");if(sl)sl.innerHTML="";
+  const i=document.getElementById("uinput");if(i){i.value="";i.type="text";i.removeAttribute("maxLength");}
+  const sb=document.getElementById("usend");if(sb){sb.textContent="Send →";sb.onclick=uSend;sb.disabled=false;}
+}
+
+function step(s){
+  U.s=s;
+  const body=document.getElementById("ubody");
+  const hint=document.getElementById("uhint");
+  const inp=document.getElementById("uinput");
+  const iw=document.getElementById("uinput-wrap");
+  const sb=document.getElementById("usend");
+
+  inp.value="";inp.type="text";delete inp.maxLength;
+  sb.disabled=false;sb.textContent="Send →";sb.onclick=uSend;
+  iw.style.display="block";
+
+  const L=lines=>{
+    const html=lines.map(l=>{
+      if(l[0]==="div") return`<div class="uline u-div">──────────────────────</div>`;
+      if(l[0]==="opt") return`<div class="uline u-opt">${l[1]}</div>`;
+      if(l[0]==="ok")  return`<div class="uline u-ok">${l[1]}</div>`;
+      if(l[0]==="title")return`<div class="uline u-title">${l[1]}</div>`;
+      if(l[0]==="num") return`<span class="u-num">${l[1]}</span>`;
+      return`<div class="uline u-text">${l[1]}</div>`;
+    }).join("");
+    return html+`<div class="u-input-row"><span class="u-gt">&gt;</span><span class="u-echo" id="uecho"></span><span class="u-cur"></span></div>`;
+  };
+
+  if(s==="dial"){
+    body.innerHTML=L([["text","Dialling"],["num","*312#"],["text","Press Send to connect"]]);
+    inp.style.display="none";hint.textContent="Press Send to open menu";
+    log("Dialling *312#…","a");
+  }
+  else if(s==="menu"){
+    body.innerHTML=L([["title","PowerDirect"],["div"],["opt","1. Buy Electricity"],["opt","2. Check Balance"],["opt","3. My Transactions"],["opt","4. Exit"]]);
+    inp.style.display="block";inp.placeholder="1 / 2 / 3 / 4";hint.textContent="Select an option";
+    log("Session open","g");
+  }
+  else if(s==="buy_meter"){
+    body.innerHTML=L([["title","Buy Electricity"],["div"],["text","Enter Meter Number:"]]);
+    inp.style.display="block";inp.placeholder="e.g. 04-RWA-2847-K";hint.textContent="Press Send to use demo meter";
+  }
+  else if(s==="buy_amt"){
+    const m=DM[U.meter];
+    body.innerHTML=L([["title","Buy Electricity"],["div"],["text",`Meter: ${U.meter}`],["text",`Owner: ${m?m.owner:"—"}`],["text",`Balance: ${m?m.balance_kwh.toFixed(2)+" kWh":"—"}`],["div"],["text","Amount (RWF):"]]);
+    inp.style.display="block";inp.type="number";inp.placeholder="Min 500, Max 50,000";hint.textContent="Enter amount in Rwandan Francs";
+  }
+  else if(s==="buy_confirm"){
+    const kh=(U.amount/RATE).toFixed(1);
+    body.innerHTML=L([["title","Confirm Payment"],["div"],["text",`Meter  : ${U.meter}`],["text",`Amount : ${rwf(U.amount)}`],["text",`Units  : ~${kh} kWh`],["div"],["opt","1. Confirm"],["opt","2. Cancel"]]);
+    inp.style.display="block";inp.placeholder="1 or 2";hint.textContent="Type 1 to confirm";
+  }
+  else if(s==="buy_pin"){
+    body.innerHTML=L([["title","Confirm with MoMo PIN"],["div"],["text","Enter 4-digit PIN:"]]);
+    inp.style.display="block";inp.type="password";inp.maxLength=4;inp.placeholder="••••";hint.textContent="Demo: type any 4 digits";
+  }
+  else if(s==="processing"){
+    body.innerHTML=`<div class="pring-wrap"><div class="pring"></div><div class="uline u-text">Processing payment…</div><div class="uline" style="font-size:9px;color:#1c2535;margin-top:3px">Do not close this session</div></div>`;
+    iw.style.display="none";runPayment();
+  }
+  else if(s==="buy_done"){
+    const kh=(U.amount/RATE).toFixed(1);
+    body.innerHTML=L([["ok","Payment Successful!"],["div"],["text",`Meter : ${U.meter}`],["ok",`+${kh} kWh credited`],["text",`Ref   : ${U.ref}`],["div"],["ok","No token needed."]]);
+    iw.style.display="block";inp.style.display="none";
+    sb.textContent="↺ New session";sb.onclick=window.goUSSD;hint.textContent="Payment complete";
+  }
+  else if(s==="bal_meter"){
+    body.innerHTML=L([["title","Check Balance"],["div"],["text","Enter Meter Number:"]]);
+    inp.style.display="block";inp.placeholder="e.g. 04-RWA-2847-K";hint.textContent="Press Send for demo meter";
+  }
+  else if(s==="bal_show"){
+    const m=DM[U.meter];
+    const kh=m?m.balance_kwh.toFixed(2):"—";
+    const rv=m?rwf(m.balance_rwf):"—";
+    body.innerHTML=L([["title","Balance"],["div"],["text",`Meter  : ${U.meter}`],["text",`Owner  : ${m?m.owner:"Unknown"}`],["ok",`Units  : ${kh} kWh`],["ok",`Value  : ${rv}`],["div"],["opt","1. Top up now"],["opt","2. Back to menu"]]);
+    inp.style.display="block";inp.placeholder="1 or 2";hint.textContent="";
+    log(`Balance ${U.meter}: ${kh} kWh`,"g");
+  }
+  else if(s==="hist_meter"){
+    body.innerHTML=L([["title","My Transactions"],["div"],["text","Enter Meter Number:"]]);
+    inp.style.display="block";inp.placeholder="e.g. 04-RWA-2847-K";hint.textContent="Press Send for demo meter";
+  }
+  else if(s==="hist_show"){
+    const txns=DT.filter(t=>t.meter_id===U.meter).slice(0,4);
+    const rows=txns.length?txns.map(t=>`${tstr(t.created_at).slice(0,5)} · ${rwf(t.amount_rwf)} · ${parseFloat(t.kwh_credited).toFixed(1)}kWh`)
+      :["No transactions yet"];
+    body.innerHTML=L([["title",`History: ${U.meter}`],["div"],...rows.map(r=>["text",r]),["div"],["opt","1. Top up"],["opt","2. Menu"]]);
+    inp.style.display="block";inp.placeholder="1 or 2";hint.textContent=`${txns.length} record(s)`;
+    log(`History ${U.meter}: ${txns.length} records`,"g");
+  }
+}
+
+window.uSend=function uSend(){
+  const v=document.getElementById("uinput").value.trim();
+  const s=U.s;
+  if(s==="dial"){step("menu");return;}
+  if(s==="menu"){
+    if(v==="2"){step("bal_meter");return;}
+    if(v==="3"){step("hist_meter");return;}
+    if(v==="4"){window.goHome();return;}
+    step("buy_meter");return;
+  }
+  if(s==="buy_meter"){
+    U.meter=v||SEED[0].id;
+    if(DEMO&&!DM[U.meter]){toast("Meter not found, using demo","err");U.meter=SEED[0].id;}
+    log("Meter: "+U.meter,"a");log("Owner: "+(DM[U.meter]?.owner||"?"),"g");
+    step("buy_amt");return;
+  }
+  if(s==="buy_amt"){
+    const a=parseInt(v)||0;
+    if(a<500||a>50000){toast("Enter 500 – 50,000 RWF","err");return;}
+    U.amount=a;step("buy_confirm");return;
+  }
+  if(s==="buy_confirm"){
+    if(v==="2"||!v){step("menu");return;}
+    step("buy_pin");return;
+  }
+  if(s==="buy_pin"){
+    if(v.length<4){toast("PIN must be 4 digits","err");return;}
+    U.pin=v;log("PIN authenticated ✓","g");step("processing");return;
+  }
+  if(s==="bal_meter"){
+    U.meter=v||SEED[0].id;
+    if(DEMO&&!DM[U.meter]){U.meter=SEED[0].id;}
+    step("bal_show");return;
+  }
+  if(s==="bal_show"){if(v==="1"){step("buy_amt");return;}step("menu");return;}
+  if(s==="hist_meter"){
+    U.meter=v||SEED[0].id;
+    if(DEMO&&!DM[U.meter]){U.meter=SEED[0].id;}
+    step("hist_show");return;
+  }
+  if(s==="hist_show"){if(v==="1"){step("buy_amt");return;}step("menu");return;}
 };
 
-/* ══════════════════════════════════════════════════════════════════
-   TOAST
-═════════════════════════════════════════════════════════════════════ */
-function toast(msg, type = "success") {
-  const t = document.getElementById("toast");
-  t.textContent = msg;
-  t.className = "show " + type;
-  setTimeout(() => t.className = "", 2800);
-}
+window.uClear=function(){const i=document.getElementById("uinput");i.value=i.value.slice(0,-1);i.dispatchEvent(new Event("input"));i.focus()};
 
-/* ══════════════════════════════════════════════════════════════════
-   SYSLOG
-═════════════════════════════════════════════════════════════════════ */
-function log(msg, cls = "") {
-  const box = document.getElementById("syslog");
-  const line = document.createElement("div");
-  line.className = "log-line";
-  line.innerHTML = `<span class="log-time">${now2str()}</span><span class="log-msg ${cls}">${msg}</span>`;
-  box.appendChild(line);
-  box.scrollTop = box.scrollHeight;
-}
+async function runPayment(){
+  const{meter,amount}=U;
+  const kh=parseFloat((amount/RATE).toFixed(2));
+  const r=mkref();U.ref=r;
+  await sleep(600);log("MoMo: debiting account…","a");
+  /* 🔧 MTN MoMo API: POST /collection/v1_0/requesttopay */
+  await sleep(900);log("MoMo: debit confirmed ✓","g");
+  await sleep(400);log("Sending command → EUCL HES…","a");
+  /* 🔧 EUCL HES API: POST /api/v1/meters/{id}/credit */
+  await sleep(600);log("DLMS/COSEM → fiber node…","a");
+  await sleep(500);log(`Meter ${meter}: credit applied ✓`,"g");
 
-/* ══════════════════════════════════════════════════════════════════
-   SEED
-═════════════════════════════════════════════════════════════════════ */
-window.seedMeters = async function() {
-  if (DEMO_MODE) { toast("Demo meters already seeded ✓"); loadAdmin(); return; }
-  for (const m of DEMO_SEED) {
-    await setDoc(doc(db, C_METERS, m.id), {
-      ...m, balance_rwf: Math.round(m.balance_kwh * 450),
-      connected: true, last_updated: serverTimestamp()
-    });
-  }
-  toast("5 demo meters seeded ✓");
-  loadAdmin();
-};
-
-/* ══════════════════════════════════════════════════════════════════
-   USSD FLOW
-═════════════════════════════════════════════════════════════════════ */
-let ussdState = { step: "idle", meterNo: "", amount: 0, pin: "" };
-
-window.startUSSD = function() {
-  ussdState = { step: "idle", meterNo: "", amount: 0, pin: "" };
-  document.getElementById("syslog").innerHTML = "";
-  showScreen("ussd");
-  setTimeout(() => renderUSSD("dial"), 300);
-};
-
-function renderUSSD(step) {
-  ussdState.step = step;
-  const body   = document.getElementById("ussd-body");
-  const hint   = document.getElementById("ussd-hint");
-  const input  = document.getElementById("ussd-input");
-  const sendBtn = document.getElementById("ussd-send-btn");
-  const area   = document.getElementById("ussd-input-area");
-
-  input.value = "";
-  sendBtn.disabled = false;
-  area.style.display = "block";
-
-  const lines = (txt) => txt.split("\n").map(l => {
-    if (l.match(/^[1-4]\./)) return `<div class="ussd-line ussd-opt">${l}</div>`;
-    if (l.startsWith("──")) return `<div class="ussd-line ussd-divider">${l}</div>`;
-    if (l.startsWith("✓") || l.includes("SUCCESS")) return `<div class="ussd-line ussd-success">${l}</div>`;
-    return `<div class="ussd-line ussd-body">${l}</div>`;
-  }).join("");
-
-  if (step === "dial") {
-    body.innerHTML = `<div class="ussd-line ussd-body">Dialling</div>
-      <div class="ussd-line" style="color:var(--amber);font-size:18px;letter-spacing:.1em;margin:10px 0">*312#</div>
-      <div class="ussd-line ussd-body">Press Send to connect…</div>`;
-    hint.textContent = "Press Send to start session";
-    input.style.display = "none";
-    log("Dialling *312#…", "amber");
-  }
-  else if (step === "menu") {
-    body.innerHTML = lines("CON PowerDirect\n──────────────────\n1. Buy Electricity\n2. Check Balance\n3. My Transactions\n4. Register Meter");
-    hint.textContent = "Type 1 for Buy Electricity";
-    input.style.display = "block";
-    input.placeholder = "1 / 2 / 3 / 4";
-    log("USSD session open", "green");
-  }
-  else if (step === "enter_meter") {
-    body.innerHTML = lines("CON Buy Electricity\n──────────────────\nEnter Meter Number:\n(e.g. 04-RWA-2847-K)");
-    hint.textContent = "Or press Send to use demo meter";
-    input.style.display = "block";
-    input.placeholder = "Meter number";
-  }
-  else if (step === "enter_amount") {
-    body.innerHTML = lines(`CON Meter: ${ussdState.meterNo}\n──────────────────\nEnter amount (RWF):\nMin: 500 · Max: 50,000`);
-    hint.textContent = "E.g. 5000";
-    input.style.display = "block";
-    input.type = "number";
-    input.placeholder = "Amount in RWF";
-  }
-  else if (step === "confirm") {
-    const kwh = (ussdState.amount / RATE_RWF_PER_KWH).toFixed(1);
-    body.innerHTML = lines(`CON Confirm Payment\n──────────────────\nMeter: ${ussdState.meterNo}\nAmount: ${fmtRwf(ussdState.amount)}\nUnits: ~${kwh} kWh\n──────────────────\n1. Confirm\n2. Cancel`);
-    hint.textContent = "Type 1 to confirm";
-    input.style.display = "block";
-    input.placeholder = "1 or 2";
-  }
-  else if (step === "pin") {
-    body.innerHTML = lines(`CON Confirm with PIN\n──────────────────\nEnter MoMo PIN:`);
-    hint.textContent = "Demo PIN: any 4 digits";
-    input.style.display = "block";
-    input.type = "password";
-    input.placeholder = "4-digit PIN";
-    input.maxLength = 4;
-  }
-  else if (step === "processing") {
-    body.innerHTML = `<div class="ussd-processing">
-      <div class="spinner">⟳</div>
-      <div class="ussd-line ussd-body" style="margin-top:12px">Processing payment…</div>
-      <div class="ussd-line" style="color:var(--text3);font-size:9px;margin-top:4px">Do not close session</div>
-    </div>`;
-    area.style.display = "none";
-    runPayment();
-  }
-  else if (step === "done") {
-    const kwh = (ussdState.amount / RATE_RWF_PER_KWH).toFixed(1);
-    body.innerHTML = `<div class="ussd-success">
-      ✓ Payment Successful!<br/>──────────────────<br/>
-      Meter ${ussdState.meterNo}<br/>
-      credited ${fmtRwf(ussdState.amount)}<br/>
-      (~${kwh} kWh)<br/><br/>
-      Ref: ${ussdState.ref}<br/><br/>
-      <span style="color:var(--green);font-weight:700">No token needed.</span>
-    </div>`;
-    hint.textContent = "Press Start Over to pay again";
-    input.style.display = "none";
-    sendBtn.textContent = "↺ Start Over";
-    sendBtn.onclick = () => renderUSSD("dial");
-  }
-  else if (step === "balance") {
-    const m = demoMeters[ussdState.meterNo];
-    const kwh = m ? m.balance_kwh.toFixed(2) : "—";
-    const rwf = m ? fmtRwf(m.balance_rwf) : "—";
-    body.innerHTML = lines(`CON Balance Check\n──────────────────\nMeter: ${ussdState.meterNo}\nBalance: ${kwh} kWh\nValue:   ${rwf}\n──────────────────\n1. Top Up\n2. Exit`);
-    hint.textContent = "Type 1 to top up";
-    input.style.display = "block";
-    input.placeholder = "1 or 2";
-  }
-
-  input.focus();
-}
-
-window.ussdSend = function() {
-  const val = document.getElementById("ussd-input").value.trim();
-  const step = ussdState.step;
-
-  if (step === "dial") { renderUSSD("menu"); return; }
-
-  if (step === "menu") {
-    if (val === "2") { ussdState.meterNo = DEMO_SEED[0].id; renderUSSD("balance"); return; }
-    renderUSSD("enter_meter");
-    return;
-  }
-
-  if (step === "enter_meter") {
-    ussdState.meterNo = val || DEMO_SEED[0].id;
-    log("Meter lookup: " + ussdState.meterNo, "amber");
-    // validate meter exists
-    const m = demoMeters[ussdState.meterNo];
-    if (!m && DEMO_MODE) { log("Meter not found, using demo", "amber"); ussdState.meterNo = DEMO_SEED[0].id; }
-    log("Owner: " + (demoMeters[ussdState.meterNo]?.owner || "Unknown"), "green");
-    renderUSSD("enter_amount");
-    return;
-  }
-
-  if (step === "enter_amount") {
-    const amt = parseInt(val) || 5000;
-    if (amt < 500 || amt > 50000) { toast("Amount must be 500–50,000 RWF", "error"); return; }
-    ussdState.amount = amt;
-    renderUSSD("confirm");
-    return;
-  }
-
-  if (step === "confirm") {
-    if (val === "2") { showScreen("home"); return; }
-    renderUSSD("pin");
-    return;
-  }
-
-  if (step === "pin") {
-    if (val.length < 4) { toast("PIN must be 4 digits", "error"); return; }
-    ussdState.pin = val;
-    log("PIN authenticated ✓", "green");
-    renderUSSD("processing");
-    return;
-  }
-
-  if (step === "balance") {
-    if (val === "2") { showScreen("home"); return; }
-    renderUSSD("enter_amount");
-    return;
-  }
-};
-
-window.ussdClear = function() {
-  const input = document.getElementById("ussd-input");
-  input.value = input.value.slice(0, -1);
-  input.focus();
-};
-
-/* ══════════════════════════════════════════════════════════════════
-   PAYMENT PROCESSOR
-   Replace the mock MoMo block with real MTN MoMo API call
-═════════════════════════════════════════════════════════════════════ */
-async function runPayment() {
-  const { meterNo, amount } = ussdState;
-  const kwh = parseFloat((amount / RATE_RWF_PER_KWH).toFixed(2));
-  const ref = genRef();
-  ussdState.ref = ref;
-
-  await sleep(700);
-  log("MoMo: Debiting account…", "amber");
-
-  /* ─────────────────────────────────────────────────────────────────
-     🔧 MTN MoMo API call goes here (replace mock)
-     Real endpoint: POST https://sandbox.momodeveloper.mtn.com/collection/v1_0/requesttopay
-     Requires: X-Reference-Id, Ocp-Apim-Subscription-Key, Authorization bearer
-  ───────────────────────────────────────────────────────────────── */
-  // MOCK: simulating 800ms payment auth
-  await sleep(800);
-  const momoSuccess = true; // replace with real API response check
-  /* ─────────────────────────────────────────────────────────────────
-     END MTN MoMo block
-  ───────────────────────────────────────────────────────────────── */
-
-  if (!momoSuccess) {
-    log("MoMo: Payment failed ✗", "red");
-    renderUSSD("menu");
-    return;
-  }
-  log("MoMo: Debit confirmed ✓", "green");
-
-  await sleep(400);
-  log("Sending command to EUCL HES…", "amber");
-  await sleep(600);
-  log("DLMS/COSEM → fiber node…", "amber");
-  await sleep(500);
-  log("Meter " + meterNo + ": Credit applied ✓", "green");
-
-  /* ─────────────────────────────────────────────────────────────────
-     🔧 EUCL HES API call goes here
-     Real endpoint: POST https://hes.eucl.rw/api/v1/meters/{meterId}/credit
-     Body: { amount_kwh, reference, timestamp }
-     (requires EUCL partnership agreement)
-  ───────────────────────────────────────────────────────────────── */
-
-  // Update meter balance
-  if (DEMO_MODE) {
-    if (demoMeters[meterNo]) {
-      demoMeters[meterNo].balance_kwh = parseFloat((demoMeters[meterNo].balance_kwh + kwh).toFixed(2));
-      demoMeters[meterNo].balance_rwf = Math.round(demoMeters[meterNo].balance_kwh * RATE_RWF_PER_KWH);
-    }
-    demoTxns.unshift({
-      meter_id: meterNo, amount_rwf: amount, kwh_credited: kwh,
-      ref, status: "success", phone: "078XXXXX" + Math.floor(Math.random()*99),
-      created_at: new Date().toISOString()
-    });
+  if(DEMO){
+    if(DM[meter]){DM[meter].balance_kwh=parseFloat((DM[meter].balance_kwh+kh).toFixed(2));DM[meter].balance_rwf=Math.round(DM[meter].balance_kwh*RATE);}
+    DT.unshift({meter_id:meter,amount_rwf:amount,kwh_credited:kh,ref:r,status:"success",phone:"078XXXXXX",created_at:new Date().toISOString()});
   } else {
-    const mRef = doc(db, C_METERS, meterNo);
-    const snap = await getDoc(mRef);
-    if (snap.exists()) {
-      const d = snap.data();
-      await updateDoc(mRef, {
-        balance_kwh: parseFloat(((d.balance_kwh || 0) + kwh).toFixed(2)),
-        balance_rwf: Math.round(((d.balance_kwh || 0) + kwh) * RATE_RWF_PER_KWH),
-        last_updated: serverTimestamp()
-      });
-    }
-    await addDoc(collection(db, C_TXNS), {
-      meter_id: meterNo, amount_rwf: amount, kwh_credited: kwh,
-      ref, status: "success", phone: "078XXXXX",
-      created_at: serverTimestamp()
-    });
+    const mref=doc(db,CM,meter);const snap=await getDoc(mref);
+    if(snap.exists()){const d=snap.data();await updateDoc(mref,{balance_kwh:parseFloat(((d.balance_kwh||0)+kh).toFixed(2)),balance_rwf:Math.round(((d.balance_kwh||0)+kh)*RATE),last_updated:serverTimestamp()});}
+    await addDoc(collection(db,CT),{meter_id:meter,amount_rwf:amount,kwh_credited:kh,ref:r,status:"success",phone:"078XXXXXX",created_at:serverTimestamp()});
   }
-
-  log("Transaction saved: " + ref, "green");
-  log("━━ Complete — no token used ━━", "amber");
-  toast("✓ " + fmtRwf(amount) + " credited to " + meterNo);
-  renderUSSD("done");
-
-  // Refresh meter view if open
-  refreshMeterView(meterNo, kwh);
+  toast("✓ "+rwf(amount)+" credited to "+meter);
+  animateMeter(meter,kh);
+  log("━━ complete · no token used ━━","g");
+  step("buy_done");
 }
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-/* ══════════════════════════════════════════════════════════════════
-   METER VIEW
-═════════════════════════════════════════════════════════════════════ */
-let activeMeterUnsub = null;
-let currentMeterData = null;
-
-window.loadMeterSelect = async function() {
-  const sel = document.getElementById("meter-select");
-  sel.innerHTML = "";
-  const meters = DEMO_MODE ? Object.values(demoMeters)
-    : await getDocs(collection(db, C_METERS)).then(s => s.docs.map(d => d.data()));
-  if (!meters.length) {
-    sel.innerHTML = '<option value="">No meters — go to Admin → Seed Demo Meters</option>';
-    return;
-  }
-  sel.innerHTML = meters.map(m => `<option value="${m.id}">${m.id} — ${m.owner}</option>`).join("");
-  loadMeter();
+/* ════════════════════ METER VIEW ════════════════════ */
+window.loadMeterSel=async function(){
+  const sel=document.getElementById("msel");
+  const meters=DEMO?Object.values(DM):await getDocs(collection(db,CM)).then(s=>s.docs.map(d=>({id:d.id,...d.data()})));
+  if(!meters.length){sel.innerHTML='<option value="">No meters – Admin → Seed demo data</option>';return;}
+  sel.innerHTML=meters.map(m=>`<option value="${m.id}">${m.id} — ${m.owner}</option>`).join("");
+  loadMeterView();
 };
 
-window.loadMeter = function() {
-  const id = document.getElementById("meter-select").value;
-  if (!id) return;
-  if (DEMO_MODE) {
-    currentMeterData = demoMeters[id];
-    renderMeterDevice(currentMeterData);
-    loadMeterTxns(id);
-  } else {
-    if (activeMeterUnsub) activeMeterUnsub();
-    activeMeterUnsub = onSnapshot(doc(db, C_METERS, id), snap => {
-      if (!snap.exists()) return;
-      currentMeterData = snap.data();
-      renderMeterDevice(currentMeterData);
-    });
-    loadMeterTxns(id);
-  }
+window.loadMeterView=function(){
+  const id=document.getElementById("msel").value;if(!id)return;
+  if(DEMO){renderMeter(DM[id]);loadMTxns(id);}
+  else{onSnapshot(doc(db,CM,id),snap=>{if(snap.exists())renderMeter({id:snap.id,...snap.data()});});loadMTxns(id);}
 };
 
-function renderMeterDevice(m) {
-  if (!m) return;
-  const kwh = parseFloat(m.balance_kwh || 0);
-  document.getElementById("meter-kwh-display").textContent = kwh.toFixed(2);
-  document.getElementById("meter-id-display").textContent  = m.id;
-  document.getElementById("meter-rwf-display").textContent = fmtRwf(Math.round(kwh * RATE_RWF_PER_KWH));
-  document.getElementById("meter-owner-display").textContent   = m.owner || "—";
-  document.getElementById("meter-loc-display").textContent  = m.location || "—";
-  document.getElementById("meter-dot").classList.add("live");
-  document.getElementById("meter-statusbar-text").textContent = "CONNECTED · FIBER";
+function renderMeter(m){
+  if(!m)return;
+  const kh=parseFloat(m.balance_kwh||0);
+  document.getElementById("mkwh").textContent=kh.toFixed(2);
+  document.getElementById("mid").textContent=m.id;
+  document.getElementById("mrwf").textContent=rwf(Math.round(kh*RATE));
+  document.getElementById("mowner").textContent=m.owner||"—";
+  document.getElementById("mloc").textContent=m.location||"—";
+  const dot=document.getElementById("mldot");dot.classList.remove("off");
+  document.getElementById("mlabel").textContent="online";
 }
 
-async function loadMeterTxns(meterId) {
-  let txns = [];
-  if (DEMO_MODE) {
-    txns = demoTxns.filter(t => t.meter_id === meterId).slice(0,10);
-  } else {
-    const q = query(collection(db, C_TXNS),
-      where("meter_id","==",meterId), orderBy("created_at","desc"), limit(10));
-    const snap = await getDocs(q);
-    txns = snap.docs.map(d => d.data());
-  }
-  const tbody = document.getElementById("meter-tx-table");
-  if (!txns.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">No transactions yet</td></tr>'; return; }
-  tbody.innerHTML = txns.map(t => `
-    <tr>
-      <td class="td-mono td-dim">${t.created_at?.toDate ? ts2str(t.created_at) : new Date(t.created_at).toLocaleTimeString()}</td>
-      <td class="td-mono text-amber">${fmtRwf(t.amount_rwf)}</td>
-      <td class="td-mono">${t.kwh_credited?.toFixed(2)} kWh</td>
-      <td class="td-mono td-dim">${t.ref}</td>
-      <td><span class="badge badge-green badge-dot">${t.status}</span></td>
+async function loadMTxns(id){
+  let txns=DEMO?DT.filter(t=>t.meter_id===id).slice(0,10)
+    :await getDocs(query(collection(db,CT),where("meter_id","==",id),orderBy("created_at","desc"),limit(10))).then(s=>s.docs.map(d=>d.data()));
+  const tb=document.getElementById("mtx");
+  if(!txns.length){tb.innerHTML='<tr><td colspan="5" class="emp">No transactions yet</td></tr>';return;}
+  tb.innerHTML=txns.map(t=>`<tr>
+    <td class="mono dim">${tstr(t.created_at)}</td>
+    <td style="font-weight:600;color:var(--primary)">${rwf(t.amount_rwf)}</td>
+    <td class="mono">${parseFloat(t.kwh_credited).toFixed(2)}</td>
+    <td class="mono dim">${t.ref}</td>
+    <td><span class="badge bg-green">${t.status}</span></td>
+  </tr>`).join("");
+}
+
+function animateMeter(meterId,kh){
+  const scr=document.getElementById("screen-meter");
+  if(!scr.classList.contains("active"))return;
+  if(document.getElementById("msel").value!==meterId)return;
+  const disp=document.getElementById("mkwh");
+  const foot=document.getElementById("mfoot");const ftxt=document.getElementById("mftxt");
+  const badge=document.getElementById("mcredit");
+  foot.className="mfoot rx";ftxt.textContent="RECEIVING CREDIT…";
+  const old=parseFloat(disp.textContent)||0;
+  const target=DM[meterId]?.balance_kwh||old+kh;
+  let cur=old,steps=40,i=0,inc=(target-old)/steps;
+  const t=setInterval(()=>{cur+=inc;i++;disp.textContent=cur.toFixed(2);disp.style.color="#ffffff";
+    if(i>=steps){clearInterval(t);disp.textContent=target.toFixed(2);disp.style.color="#a8e6a0";
+      foot.className="mfoot ok";ftxt.textContent="CONNECTED · FIBER";
+      document.getElementById("mrwf").textContent=rwf(Math.round(target*RATE));
+      badge.style.display="block";badge.className="mcredit";
+      badge.innerHTML=`✓ DIRECT CREDIT RECEIVED &nbsp;·&nbsp; +${kh.toFixed(2)} kWh &nbsp;·&nbsp; NO TOKEN REQUIRED`;
+      loadMTxns(meterId);}
+  },40);
+}
+
+/* ════════════════════ ADMIN ════════════════════ */
+window.seedMeters=async function(){
+  if(DEMO){toast("Demo data ready ✓");loadAdmin();return;}
+  for(const m of SEED)await setDoc(doc(db,CM,m.id),{...m,balance_rwf:Math.round(m.balance_kwh*RATE),connected:true,last_updated:serverTimestamp()});
+  toast("5 meters seeded ✓");loadAdmin();
+};
+
+async function loadAdmin(){
+  const meters=DEMO?Object.values(DM):await getDocs(collection(db,CM)).then(s=>s.docs.map(d=>({id:d.id,...d.data()})));
+  const txns=DEMO?[...DT]:await getDocs(query(collection(db,CT),orderBy("created_at","desc"),limit(50))).then(s=>s.docs.map(d=>d.data()));
+  const vol=txns.reduce((s,t)=>s+(t.amount_rwf||0),0);
+  const ok=txns.filter(t=>t.status==="success").length;
+  document.getElementById("sm").textContent=meters.length;
+  document.getElementById("stx").textContent=txns.length;
+  document.getElementById("sv").textContent=vol?(vol/1000).toFixed(0)+"K":"0";
+  document.getElementById("sr").textContent=txns.length?Math.round(ok/txns.length*100)+"%":"—";
+
+  const mb=document.getElementById("atbl");
+  mb.innerHTML=!meters.length?'<tr><td colspan="6" class="emp">No meters — click "Seed demo data"</td></tr>'
+    :meters.map(m=>`<tr>
+      <td><span class="chip">${m.id}</span></td>
+      <td style="font-weight:500">${m.owner||"—"}</td>
+      <td class="dim">${m.location||"—"}</td>
+      <td class="mono" style="color:var(--primary);font-weight:600">${parseFloat(m.balance_kwh||0).toFixed(2)}</td>
+      <td class="mono">${rwf(m.balance_rwf||0)}</td>
+      <td><span class="badge ${m.connected?"bg-green":"bg-gray"}">${m.connected?"online":"offline"}</span></td>
+    </tr>`).join("");
+
+  const tb=document.getElementById("ttbl");
+  tb.innerHTML=!txns.length?'<tr><td colspan="7" class="emp">No transactions yet — run a USSD payment first</td></tr>'
+    :txns.map(t=>`<tr>
+      <td class="mono dim">${tstr(t.created_at)}</td>
+      <td><span class="chip">${t.meter_id}</span></td>
+      <td class="mono dim">${t.phone||"—"}</td>
+      <td style="font-weight:600;color:var(--primary)">${rwf(t.amount_rwf||0)}</td>
+      <td class="mono">${parseFloat(t.kwh_credited||0).toFixed(2)}</td>
+      <td class="mono dim">${t.ref||"—"}</td>
+      <td><span class="badge bg-green">${t.status}</span></td>
     </tr>`).join("");
 }
 
-function refreshMeterView(meterId, kwh) {
-  if (document.getElementById("screen-meter").classList.contains("active")) {
-    const curId = document.getElementById("meter-select").value;
-    if (curId !== meterId) return;
-    // animate counter
-    const disp = document.getElementById("meter-kwh-display");
-    const statusBar = document.getElementById("meter-statusbar");
-    const statusTxt = document.getElementById("meter-statusbar-text");
-    const creditedMsg = document.getElementById("meter-credited-msg");
-
-    statusBar.classList.add("receiving");
-    statusTxt.textContent = "RECEIVING CREDIT…";
-    document.getElementById("meter-dot").style.boxShadow = "0 0 14px var(--green)";
-
-    const old = parseFloat(disp.textContent) || 0;
-    const target = demoMeters[meterId]?.balance_kwh || old + kwh;
-    let cur = old, steps = 40;
-    const inc = (target - old) / steps;
-    let i = 0;
-    const timer = setInterval(() => {
-      cur += inc; i++;
-      disp.textContent = cur.toFixed(2);
-      disp.style.color = "#ffffff";
-      if (i >= steps) {
-        clearInterval(timer);
-        disp.textContent = target.toFixed(2);
-        disp.style.color = "var(--amber)";
-        statusBar.classList.remove("receiving");
-        statusTxt.textContent = "CONNECTED · FIBER";
-        document.getElementById("meter-rwf-display").textContent = fmtRwf(Math.round(target * RATE_RWF_PER_KWH));
-        creditedMsg.style.display = "block";
-        creditedMsg.className = "meter-credited";
-        creditedMsg.innerHTML = `✓ DIRECT CREDIT RECEIVED<br/><span style="color:var(--text2)">+${kwh.toFixed(2)} kWh · NO TOKEN REQUIRED</span>`;
-        loadMeterTxns(meterId);
-      }
-    }, 40);
-  }
-}
-
-/* ══════════════════════════════════════════════════════════════════
-   ADMIN
-═════════════════════════════════════════════════════════════════════ */
-async function loadAdmin() {
-  let meters = [], txns = [];
-  if (DEMO_MODE) {
-    meters = Object.values(demoMeters);
-    txns   = [...demoTxns];
-  } else {
-    const [mSnap, tSnap] = await Promise.all([
-      getDocs(collection(db, C_METERS)),
-      getDocs(query(collection(db, C_TXNS), orderBy("created_at","desc"), limit(50)))
-    ]);
-    meters = mSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    txns   = tSnap.docs.map(d => d.data());
-  }
-
-  // Stats
-  const totalVol = txns.reduce((s,t) => s + (t.amount_rwf||0), 0);
-  const successCount = txns.filter(t => t.status === "success").length;
-  document.getElementById("stat-meters").textContent = meters.length;
-  document.getElementById("stat-txns").textContent   = txns.length;
-  document.getElementById("stat-vol").textContent    = totalVol ? (totalVol/1000).toFixed(0)+"K" : "0";
-  document.getElementById("stat-rate").textContent   = txns.length ? Math.round(successCount/txns.length*100)+"%" : "—";
-
-  // Meters table
-  const mtb = document.getElementById("admin-meters-table");
-  if (!meters.length) { mtb.innerHTML = '<tr><td colspan="6" class="empty">No meters. Click "Seed Demo Meters" →</td></tr>'; }
-  else mtb.innerHTML = meters.map(m => `
-    <tr>
-      <td class="td-mono"><span class="chip">${m.id}</span></td>
-      <td>${m.owner||"—"}</td>
-      <td class="td-dim td-mono">${m.location||"—"}</td>
-      <td class="td-mono text-amber">${parseFloat(m.balance_kwh||0).toFixed(2)}</td>
-      <td class="td-mono">${fmtRwf(m.balance_rwf||0)}</td>
-      <td><span class="badge ${m.connected ? "badge-green badge-dot":"badge-red"}">
-        ${m.connected?"online":"offline"}</span></td>
-    </tr>`).join("");
-
-  // Transactions table
-  const ttb = document.getElementById("admin-tx-table");
-  if (!txns.length) { ttb.innerHTML = '<tr><td colspan="7" class="empty">No transactions yet</td></tr>'; }
-  else ttb.innerHTML = txns.map(t => `
-    <tr>
-      <td class="td-mono td-dim">${t.created_at?.toDate ? ts2str(t.created_at) : new Date(t.created_at).toLocaleTimeString()}</td>
-      <td class="td-mono"><span class="chip">${t.meter_id}</span></td>
-      <td class="td-mono td-dim">${t.phone||"—"}</td>
-      <td class="td-mono text-amber">${fmtRwf(t.amount_rwf||0)}</td>
-      <td class="td-mono">${(t.kwh_credited||0).toFixed(2)}</td>
-      <td class="td-mono td-dim">${t.ref||"—"}</td>
-      <td><span class="badge badge-green">${t.status}</span></td>
-    </tr>`).join("");
-}
-
-/* ══════════════════════════════════════════════════════════════════
-   BOOT
-═════════════════════════════════════════════════════════════════════ */
-setTimeout(() => {
-  document.getElementById("loader").style.display = "none";
-  if (DEMO_MODE) toast("Demo mode — no Firebase needed", "success");
-}, 1600);
-
+/* boot */
+window.addEventListener("load",()=>{
+  setTimeout(()=>{
+    document.getElementById("loader").style.display="none";
+    document.getElementById("app").style.display="block";
+    if(DEMO)toast("Demo mode active");
+  },1300);
+});
 </script>
 </body>
 </html>
