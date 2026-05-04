@@ -3,689 +3,614 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>PowerDirect</title>
+<title>PowerDirect – Signal Flow Simulation</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;700;800&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#f4f6f9;--white:#fff;--border:#e5e7eb;--border2:#d1d5db;
-  --primary:#1a6b3c;--primary-light:#e8f5ee;--primary-mid:#2d8a52;
-  --accent:#f5a623;--red:#dc2626;--red-light:#fef2f2;
-  --text:#111827;--text2:#4b5563;--text3:#9ca3af;
-  --shadow:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
-  --shadow-md:0 4px 16px rgba(0,0,0,.08);--shadow-lg:0 8px 32px rgba(0,0,0,.12);
-  --r:12px;--r-sm:8px;--font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
-}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased}
-input,button,select{font-family:inherit}
-button{cursor:pointer;border:none;background:none}
-input,select{outline:none;border:none;background:none;color:inherit}
-.screen{display:none;min-height:100vh;flex-direction:column;animation:fadeUp .2s ease}
-.screen.active{display:flex}
-@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
-
-/* nav */
-.nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:54px;position:sticky;top:0;z-index:100}
-.nav-logo{display:flex;align-items:center;gap:8px}
-.logo-box{width:30px;height:30px;border-radius:7px;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:15px}
-.logo-text{font-weight:800;font-size:15px;letter-spacing:-.02em}
-.logo-text span{color:var(--primary)}
-.nav-links{display:flex;gap:2px}
-.nlink{padding:5px 11px;border-radius:6px;font-size:13px;font-weight:500;color:var(--text2);transition:all .15s}
-.nlink:hover{background:var(--bg);color:var(--text)}
-.nlink.on{background:var(--primary-light);color:var(--primary);font-weight:600}
-
-/* page containers */
-.page{flex:1;padding:20px;max-width:460px;margin:0 auto;width:100%}
-.page-wide{flex:1;padding:20px;max-width:900px;margin:0 auto;width:100%}
-
-/* cards */
-.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:18px;box-shadow:var(--shadow)}
-
-/* buttons */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:12px 18px;border-radius:var(--r-sm);font-size:13px;font-weight:600;transition:all .15s;border:1.5px solid transparent;cursor:pointer}
-.btn-p{background:var(--primary);color:#fff;border-color:var(--primary)}
-.btn-p:hover{background:#155c34;box-shadow:0 4px 12px rgba(26,107,60,.28)}
-.btn-o{background:transparent;color:var(--primary);border-color:var(--primary)}
-.btn-o:hover{background:var(--primary-light)}
-.btn-g{background:transparent;color:var(--text2);border-color:var(--border2)}
-.btn-g:hover{background:var(--bg)}
-.btn-full{width:100%}
-.btn-sm{padding:7px 13px;font-size:12px}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.btn:active{transform:scale(.98)}
-
-/* form */
-.field{margin-bottom:14px}
-.field label{display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px;letter-spacing:.03em}
-.field input,.field select{width:100%;padding:11px 13px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-size:14px;transition:border-color .15s,box-shadow .15s}
-.field input:focus,.field select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,107,60,.1);background:var(--white)}
-.field input::placeholder{color:var(--text3)}
-.field select option{background:var(--white)}
-.hint{font-size:11px;color:var(--text3);margin-top:4px}
-
-/* badges */
-.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
-.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
-.bg-green{background:#dcfce7;color:#15803d}
-.bg-amber{background:#fef3c7;color:#92400e}
-.bg-red{background:#fee2e2;color:#dc2626}
-.bg-gray{background:var(--bg);color:var(--text3)}
-.bg-gray::before{display:none}
-
-/* home hero */
-.hero{padding:28px 22px 26px;background:linear-gradient(155deg,#1a6b3c,#0f4228);border-radius:16px;color:#fff;margin-bottom:18px;position:relative;overflow:hidden}
-.hero::after{content:'⚡';position:absolute;right:-8px;top:-14px;font-size:110px;opacity:.06;pointer-events:none}
-.hero-tag{display:inline-block;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.14);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px}
-.hero-title{font-size:24px;font-weight:800;line-height:1.2;margin-bottom:7px;letter-spacing:-.02em}
-.hero-sub{font-size:13px;opacity:.72;line-height:1.65;margin-bottom:22px}
-.dial-btn{display:inline-flex;align-items:center;gap:9px;background:rgba(255,255,255,.94);color:var(--primary);padding:13px 26px;border-radius:var(--r);font-size:17px;font-weight:800;letter-spacing:.04em;transition:all .2s;box-shadow:0 4px 18px rgba(0,0,0,.18);cursor:pointer;border:none;font-family:var(--font)}
-.dial-btn:hover{background:#fff;transform:translateY(-1px);box-shadow:0 6px 22px rgba(0,0,0,.22)}
-.features{display:flex;flex-direction:column;gap:9px}
-.feat{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:13px 15px;display:flex;align-items:center;gap:12px}
-.feat-icon{width:36px;height:36px;border-radius:9px;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
-.feat-title{font-size:13px;font-weight:600}
-.feat-sub{font-size:12px;color:var(--text2);margin-top:1px}
-
-/* phone */
-.ussd-page{flex:1;padding:20px;display:flex;flex-direction:column;align-items:center;gap:18px;max-width:360px;margin:0 auto;width:100%}
-.phone{width:100%;background:linear-gradient(160deg,#1c2233,#141820);border-radius:30px;border:2px solid #252b3b;box-shadow:var(--shadow-lg),inset 0 1px 0 rgba(255,255,255,.04);padding:14px 13px 18px}
-.pnotch{width:68px;height:8px;border-radius:4px;background:#0d1018;margin:0 auto 12px;border:1px solid #252b3b}
-.pscreen{background:#090c12;border-radius:14px;min-height:230px;padding:13px 11px}
-.pstatus{display:flex;justify-content:space-between;margin-bottom:10px}
-.pcarrier,.psignal{font-size:9px;font-family:var(--mono);color:#5a6880}
-.pussd-hdr{font-size:9.5px;font-weight:600;color:#f5a623;border-bottom:1px solid #161e2e;padding-bottom:7px;margin-bottom:9px;font-family:var(--mono);letter-spacing:.03em}
-.uline{font-family:var(--mono);font-size:10.5px;line-height:1.9}
-.u-text{color:#7a8fa8}
-.u-opt{color:#4ade80;font-weight:500}
-.u-div{color:#1c2535}
-.u-title{color:#dde6f0;font-weight:600}
-.u-ok{color:#4ade80}
-.u-num{color:#f5a623;font-size:20px;letter-spacing:.08em;display:block;margin:8px 0}
-.u-input-row{display:flex;align-items:center;gap:5px;margin-top:9px;padding-top:7px;border-top:1px solid #161e2e}
-.u-gt{color:#4ade80;font-family:var(--mono);font-size:12px;font-weight:600}
-.u-echo{color:#e0eaf5;font-family:var(--mono);font-size:12px}
-.u-cur{display:inline-block;width:6px;height:12px;background:#4ade80;margin-left:1px;vertical-align:middle;animation:blink 1s step-end infinite}
-.pbtns{display:flex;gap:7px;margin-top:10px}
-.pbtn{flex:1;padding:8px 0;border-radius:9px;font-size:10.5px;font-weight:700;border:1.5px solid;transition:all .15s;font-family:var(--font);cursor:pointer}
-.pbtn-send{background:rgba(74,222,128,.11);border-color:#4ade80;color:#4ade80}
-.pbtn-clear{background:rgba(255,255,255,.03);border-color:#252b3b;color:#5a6880}
-.pbtn:hover{filter:brightness(1.12)}
-.pring-wrap{text-align:center;padding:28px 0}
-.pring{width:38px;height:38px;border-radius:50%;border:3px solid #161e2e;border-top-color:#4ade80;animation:spin .8s linear infinite;margin:0 auto 12px}
-
-/* ussd input below phone */
-.ussd-inp{width:100%;padding:12px 15px;background:var(--white);border:1.5px solid var(--border2);border-radius:var(--r-sm);color:var(--text);font-size:15px;font-family:var(--mono);letter-spacing:.04em;transition:border-color .15s,box-shadow .15s}
-.ussd-inp:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,107,60,.1)}
-.ussd-inp::placeholder{color:var(--text3);letter-spacing:0;font-family:var(--font)}
-
-/* syslog */
-.syslog{background:var(--white);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 13px;max-height:100px;overflow-y:auto;width:100%}
-.lr{display:flex;gap:8px;margin-bottom:3px;font-size:10.5px}
-.lt{color:var(--text3);font-family:var(--mono);min-width:54px;flex-shrink:0}
-.lm{color:var(--text2)}
-.lm.g{color:#16803c;font-weight:500}
-.lm.a{color:#92400e}
-.lm.r{color:#dc2626}
-
-/* meter device */
-.meter-dev{background:linear-gradient(145deg,#0e1a0c,#0a1209);border-radius:16px;border:2px solid #192b17;padding:18px;color:#fff;box-shadow:var(--shadow-lg)}
-.mhdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
-.mbrand{font-size:10px;font-weight:700;color:#4a9a40;letter-spacing:.14em;text-transform:uppercase;font-family:var(--mono)}
-.msub{font-size:8.5px;color:#2a3f28;margin-top:2px;font-family:var(--mono)}
-.mlive{display:flex;align-items:center;gap:5px;font-size:10px;color:#4a9a40;font-family:var(--mono);font-weight:600}
-.mldot{width:7px;height:7px;border-radius:50%;background:#4a9a40;animation:pulse 2s infinite}
-.mldot.off{background:#253520;animation:none}
-.mlcd{background:#050b04;border-radius:9px;border:1px solid #0e1a0c;padding:14px 13px;margin-bottom:12px;box-shadow:inset 0 2px 8px rgba(0,0,0,.6)}
-.mlcd-lbl{font-size:8.5px;color:#263520;letter-spacing:.12em;margin-bottom:5px;font-family:var(--mono)}
-.mval{font-size:40px;font-weight:500;color:#a8e6a0;letter-spacing:.04em;font-family:var(--mono);text-shadow:0 0 18px rgba(168,230,160,.28);transition:all .08s}
-.munit{font-size:13px;color:#4a7a40;margin-left:4px;font-family:var(--mono)}
-.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}
-.mcell{background:#060e05;border-radius:7px;border:1px solid #0e1a0c;padding:7px 9px}
-.mclbl{font-size:8px;color:#263520;letter-spacing:.08em;font-family:var(--mono)}
-.mcval{font-size:10.5px;color:#60a058;margin-top:3px;font-family:var(--mono)}
-.mfoot{display:flex;align-items:center;gap:6px;background:#040903;border-radius:7px;border:1px solid #0e1a0c;padding:7px 10px;font-size:10px;font-family:var(--mono);transition:all .4s}
-.mfoot.ok{color:#4a9a40}
-.mfoot.rx{color:#4ade80;border-color:rgba(74,222,128,.2);background:rgba(74,222,128,.04)}
-.mfdot{width:6px;height:6px;border-radius:50%;background:#1f2e1c;flex-shrink:0}
-.mfoot.rx .mfdot{background:#4ade80;animation:pulse .7s infinite}
-.mcredit{margin-top:9px;padding:8px 11px;border-radius:7px;background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.14);font-size:10.5px;color:#4ade80;font-family:var(--mono);animation:fadeUp .4s ease}
-
-/* stats */
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
-@media(min-width:600px){.stats{grid-template-columns:repeat(4,1fr)}}
-.stat{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:15px}
-.slbl{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.04em;text-transform:uppercase;margin-bottom:5px}
-.sval{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.02em}
-.ssub{font-size:11px;color:var(--text3);margin-top:2px}
-
-/* table */
-.tcard{background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
-.tcard-hdr{padding:13px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.tcard-title{font-size:13px;font-weight:700}
-.ox{overflow-x:auto}
-.tbl{width:100%;border-collapse:collapse}
-.tbl th{padding:9px 13px;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);text-align:left;background:var(--bg);border-bottom:1px solid var(--border)}
-.tbl td{padding:11px 13px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
-.tbl tr:last-child td{border-bottom:none}
-.tbl tr:hover td{background:#fafbfc}
-.mono{font-family:var(--mono);font-size:11.5px}
-.dim{color:var(--text2)}
-.emp{text-align:center;padding:30px 16px;color:var(--text3);font-size:13px}
-.chip{display:inline-block;padding:2px 7px;border-radius:5px;font-family:var(--mono);font-size:11px;background:var(--bg);border:1px solid var(--border2);color:var(--text2)}
-
-/* toast */
-#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(56px);background:var(--text);color:#fff;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:500;white-space:nowrap;box-shadow:var(--shadow-lg);transition:transform .25s cubic-bezier(.34,1.56,.64,1);z-index:9999}
-#toast.show{transform:translateX(-50%) translateY(0)}
-#toast.ok{background:var(--primary)}
-#toast.err{background:var(--red)}
-
-/* loader */
-#loader{position:fixed;inset:0;background:var(--white);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
-.ll{font-size:26px;font-weight:800;color:var(--primary);letter-spacing:-.02em}
-.lb{width:90px;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
-.lf{height:100%;background:var(--primary);animation:ldfill 1.3s ease forwards}
-@keyframes ldfill{from{width:0}to{width:100%}}
-.lc{font-size:12px;color:var(--text3)}
-
-/* misc */
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.mb-12{margin-bottom:12px}.mb-16{margin-bottom:16px}.mb-20{margin-bottom:20px}.mt-6{margin-top:6px}.mt-12{margin-top:12px}
-.row{display:flex;align-items:center}.rb{display:flex;align-items:center;justify-content:space-between}
-.slabel{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:8px}
-::-webkit-scrollbar{width:4px;height:4px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{background:#060a07;color:#fff;font-family:'Syne',sans-serif;-webkit-font-smoothing:antialiased}
+  #root{min-height:100vh}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+  @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  input:focus{outline:none}
+  button:focus{outline:none}
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:#1e3a2e;border-radius:2px}
 </style>
 </head>
 <body>
+<div id="root"></div>
 
-<div id="loader">
-  <div class="ll">⚡ PowerDirect</div>
-  <div class="lb"><div class="lf"></div></div>
-  <div class="lc">Loading…</div>
-</div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
 
-<div id="app" style="display:none">
+// ── Constants ──────────────────────────────────────────────────────────────
+const METER = {
+  id: "04-RWA-2847-K",
+  owner: "Uwimana Jean Pierre",
+  location: "Kimironko, Kigali",
+  tariff: "Residential – Category A",
+  balanceKwh: 4.2,
+  balanceRwf: 1890,
+};
 
-<!-- HOME -->
-<div class="screen active" id="screen-home">
-  <nav class="nav">
-    <div class="nav-logo"><div class="logo-box">⚡</div><div class="logo-text">Power<span>Direct</span></div></div>
-    <div class="nav-links">
-      <button class="nlink on">Home</button>
-      <button class="nlink" onclick="goMeter()">Meter</button>
-      <button class="nlink" onclick="goAdmin()">Admin</button>
-    </div>
-  </nav>
-  <div class="page">
-    <div class="hero">
-      <div class="hero-tag">Rwanda · EUCL Network</div>
-      <div class="hero-title">Electricity credit,<br/>straight to your meter.</div>
-      <div class="hero-sub">No token. No keypad entry. Pay once<br/>and your meter updates instantly.</div>
-      <button class="dial-btn" onclick="goUSSD()">📞 Dial *312#</button>
-    </div>
-    <div class="features">
-      <div class="feat"><div class="feat-icon">⚡</div><div><div class="feat-title">Direct to meter</div><div class="feat-sub">Credit arrives in under 3 seconds via fiber</div></div></div>
-      <div class="feat"><div class="feat-icon">📵</div><div><div class="feat-title">No internet required</div><div class="feat-sub">Works on any phone with USSD (*312#)</div></div></div>
-      <div class="feat"><div class="feat-icon">🏠</div><div><div class="feat-title">Multiple meters</div><div class="feat-sub">Landlords can top up all units at once</div></div></div>
-      <div class="feat"><div class="feat-icon">📋</div><div><div class="feat-title">Full history</div><div class="feat-sub">Every transaction logged with reference</div></div></div>
-    </div>
-  </div>
-</div>
-
-<!-- USSD -->
-<div class="screen" id="screen-ussd">
-  <nav class="nav">
-    <div class="nav-logo"><div class="logo-box">⚡</div><div class="logo-text">Power<span>Direct</span></div></div>
-    <button class="nlink" onclick="goHome()">← Home</button>
-  </nav>
-  <div class="ussd-page">
-    <div class="phone">
-      <div class="pnotch"></div>
-      <div class="pscreen">
-        <div class="pstatus"><span class="pcarrier">MTN RW</span><span class="psignal">●●●●○ 4G</span></div>
-        <div class="pussd-hdr">*312# · PowerDirect</div>
-        <div id="ubody"></div>
-      </div>
-      <div class="pbtns">
-        <button class="pbtn pbtn-clear" onclick="uClear()">← Clear</button>
-        <button class="pbtn pbtn-send" id="usend" onclick="uSend()">Send →</button>
-      </div>
-    </div>
-
-    <div style="width:100%" id="uinput-wrap">
-      <input id="uinput" class="ussd-inp" placeholder="Type here…" autocomplete="off"
-        onkeydown="if(event.key==='Enter')uSend()"
-        oninput="const e=document.getElementById('uecho');if(e)e.textContent=this.type==='password'?'●'.repeat(this.value.length):this.value"/>
-      <div class="hint mt-6" id="uhint"></div>
-    </div>
-
-    <div style="width:100%">
-      <div class="slabel">Signal log</div>
-      <div class="syslog" id="syslog">
-        <div class="lr"><span class="lt">--:--:--</span><span class="lm">Waiting…</span></div>
-      </div>
-    </div>
-
-    <button class="btn btn-g btn-full" onclick="goHome()">← Back to Home</button>
-  </div>
-</div>
-
-<!-- METER VIEW -->
-<div class="screen" id="screen-meter">
-  <nav class="nav">
-    <div class="nav-logo"><div class="logo-box">⚡</div><div class="logo-text">Power<span>Direct</span></div></div>
-    <div class="nav-links">
-      <button class="nlink" onclick="goHome()">Home</button>
-      <button class="nlink on">Meter</button>
-      <button class="nlink" onclick="goAdmin()">Admin</button>
-    </div>
-  </nav>
-  <div class="page">
-    <div class="card mb-12" style="padding:12px 15px">
-      <div class="field" style="margin:0"><label>Select Meter</label>
-        <select id="msel" onchange="loadMeterView()"><option value="">Loading…</option></select>
-      </div>
-    </div>
-
-    <div class="meter-dev mb-12">
-      <div class="mhdr">
-        <div><div class="mbrand">EUCL Smart Meter</div><div class="msub">AMI-FIBER · STS v2.1 · PowerDirect</div></div>
-        <div class="mlive"><div class="mldot off" id="mldot"></div><span id="mlabel">offline</span></div>
-      </div>
-      <div class="mlcd">
-        <div class="mlcd-lbl">AVAILABLE UNITS</div>
-        <div><span class="mval" id="mkwh">--.--</span><span class="munit">kWh</span></div>
-      </div>
-      <div class="mgrid">
-        <div class="mcell"><div class="mclbl">METER ID</div><div class="mcval" id="mid">—</div></div>
-        <div class="mcell"><div class="mclbl">EST. VALUE</div><div class="mcval" id="mrwf">—</div></div>
-        <div class="mcell"><div class="mclbl">OWNER</div><div class="mcval" id="mowner">—</div></div>
-        <div class="mcell"><div class="mclbl">LOCATION</div><div class="mcval" id="mloc">—</div></div>
-      </div>
-      <div class="mfoot ok" id="mfoot"><div class="mfdot" id="mfdot"></div><span id="mftxt">CONNECTED · FIBER</span></div>
-      <div id="mcredit" style="display:none" class="mcredit"></div>
-    </div>
-
-    <div class="tcard">
-      <div class="tcard-hdr"><div class="tcard-title">Recent Credits</div></div>
-      <div class="ox"><table class="tbl">
-        <thead><tr><th>Time</th><th>Amount</th><th>kWh</th><th>Ref</th><th>Status</th></tr></thead>
-        <tbody id="mtx"><tr><td colspan="5" class="emp">No transactions yet</td></tr></tbody>
-      </table></div>
-    </div>
-  </div>
-</div>
-
-<!-- ADMIN -->
-<div class="screen" id="screen-admin">
-  <nav class="nav">
-    <div class="nav-logo"><div class="logo-box">⚡</div><div class="logo-text">Power<span>Direct</span></div></div>
-    <div class="nav-links">
-      <button class="nlink" onclick="goHome()">Home</button>
-      <button class="nlink" onclick="goMeter()">Meter</button>
-      <button class="nlink on">Admin</button>
-    </div>
-  </nav>
-  <div class="page-wide">
-    <div class="rb mb-20">
-      <div><div style="font-size:17px;font-weight:800;letter-spacing:-.02em">Dashboard</div><div style="font-size:13px;color:var(--text2);margin-top:2px">All meters · all transactions · live</div></div>
-      <button class="btn btn-o btn-sm" onclick="seedMeters()">+ Seed demo data</button>
-    </div>
-    <div class="stats">
-      <div class="stat"><div class="slbl">Meters</div><div class="sval" id="sm">—</div><div class="ssub">registered</div></div>
-      <div class="stat"><div class="slbl">Transactions</div><div class="sval" id="stx">—</div><div class="ssub">all time</div></div>
-      <div class="stat"><div class="slbl">Volume</div><div class="sval" id="sv">—</div><div class="ssub">RWF processed</div></div>
-      <div class="stat"><div class="slbl">Success rate</div><div class="sval" id="sr">—</div><div class="ssub">of payments</div></div>
-    </div>
-    <div class="tcard mb-16">
-      <div class="tcard-hdr"><div class="tcard-title">Meters</div></div>
-      <div class="ox"><table class="tbl">
-        <thead><tr><th>Meter ID</th><th>Owner</th><th>Location</th><th>Balance (kWh)</th><th>Value (RWF)</th><th>Status</th></tr></thead>
-        <tbody id="atbl"><tr><td colspan="6" class="emp">Loading…</td></tr></tbody>
-      </table></div>
-    </div>
-    <div class="tcard">
-      <div class="tcard-hdr"><div class="tcard-title">All Transactions</div></div>
-      <div class="ox"><table class="tbl">
-        <thead><tr><th>Time</th><th>Meter</th><th>Phone</th><th>Amount</th><th>kWh</th><th>Ref</th><th>Status</th></tr></thead>
-        <tbody id="ttbl"><tr><td colspan="7" class="emp">No transactions yet</td></tr></tbody>
-      </table></div>
-    </div>
-  </div>
-</div>
-
-</div><!-- #app -->
-<div id="toast"></div>
-
-<script type="module">
-import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import{getFirestore,collection,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,onSnapshot,query,orderBy,where,limit,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-/* ── Firebase config — replace when ready ── */
-const FBC={apiKey:"REPLACE",authDomain:"REPLACE.firebaseapp.com",projectId:"REPLACE",storageBucket:"REPLACE.appspot.com",messagingSenderId:"REPLACE",appId:"REPLACE"};
-const DEMO=true; // set false + fill FBC to use Firebase
-
-const SEED=[
-  {id:"04-RWA-2847-K",owner:"Uwimana Jean Pierre",location:"Kimironko, Kigali",   tariff:"Residential A",balance_kwh:4.2},
-  {id:"07-RWA-1193-N",owner:"Mutesi Annonciata",  location:"Nyamirambo, Kigali",  tariff:"Residential A",balance_kwh:11.8},
-  {id:"02-RWA-5041-G",owner:"Habimana Eric",       location:"Gikondo, Kigali",     tariff:"Residential B",balance_kwh:0.4},
-  {id:"11-RWA-3382-M",owner:"Ishimwe Claudette",   location:"Musanze, Northern",   tariff:"Residential A",balance_kwh:7.1},
-  {id:"09-RWA-7712-B",owner:"Nkurunziza Patrick",  location:"Butare, Southern",    tariff:"Commercial A",  balance_kwh:22.5},
+const USSD_STEPS = [
+  { id: "dial",     label: "Dial" },
+  { id: "menu",     label: "Menu" },
+  { id: "meter",    label: "Meter No." },
+  { id: "amount",   label: "Amount" },
+  { id: "confirm",  label: "Confirm" },
+  { id: "pin",      label: "PIN" },
+  { id: "sending",  label: "Processing" },
+  { id: "done",     label: "Done" },
 ];
-let DM={},DT=[];
-SEED.forEach(m=>{DM[m.id]={...m,balance_rwf:Math.round(m.balance_kwh*450),connected:true}});
 
-let db=null;
-if(!DEMO){const a=initializeApp(FBC);db=getFirestore(a);}
+const NODES = [
+  { id: "phone",  label: "Your Phone",    sub: "USSD *312#",         x: 7,  y: 50, icon: "📱" },
+  { id: "tower",  label: "Cell Tower",    sub: "MTN GSM",            x: 28, y: 20, icon: "📡" },
+  { id: "momo",   label: "MoMo Server",   sub: "Payment Auth",       x: 50, y: 10, icon: "💳" },
+  { id: "hes",    label: "EUCL Head-End", sub: "Meter Command API",  x: 72, y: 30, icon: "🖥️" },
+  { id: "fiber",  label: "Fiber Node",    sub: "Distribution Net",   x: 88, y: 58, icon: "🔌" },
+  { id: "meter",  label: "Smart Meter",   sub: METER.id,             x: 72, y: 80, icon: "⚡" },
+];
 
-const RATE=450,CM="pd_meters",CT="pd_transactions";
-const rwf=n=>Number(n).toLocaleString()+" RWF";
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-function mkref(){return"RWA"+Date.now().toString(36).toUpperCase().slice(-8)}
-function tstr(ts){if(!ts)return"—";const d=ts.toDate?ts.toDate():new Date(ts);return d.toLocaleTimeString("en-RW",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}
-function now(){return new Date().toLocaleTimeString("en-RW",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}
+const EDGES = [
+  { from: "phone", to: "tower",  label: "USSD request" },
+  { from: "tower", to: "momo",   label: "Auth + debit" },
+  { from: "momo",  to: "hes",    label: "Credit command" },
+  { from: "hes",   to: "fiber",  label: "DLMS/COSEM" },
+  { from: "fiber", to: "meter",  label: "Direct credit" },
+];
 
-function toast(msg,t="ok"){const el=document.getElementById("toast");el.textContent=msg;el.className="show "+t;setTimeout(()=>el.className="",2600)}
+function fmtRwf(n) { return `${Number(n).toLocaleString()} RWF`; }
 
-function log(msg,c=""){
-  const b=document.getElementById("syslog");if(!b)return;
-  const d=document.createElement("div");d.className="lr";
-  d.innerHTML=`<span class="lt">${now()}</span><span class="lm ${c}">${msg}</span>`;
-  b.appendChild(d);b.scrollTop=b.scrollHeight;
+// ── Packet dot ──────────────────────────────────────────────────────────────
+function PacketDot({ path, delay = 0, color = "#00ff88", active }) {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    if (!active) { setShow(false); return; }
+    const t = setTimeout(() => setShow(true), delay * 1000);
+    return () => clearTimeout(t);
+  }, [active, delay]);
+  if (!show) return null;
+  return (
+    <circle r="4.5" fill={color} style={{ filter: `drop-shadow(0 0 5px ${color})` }}>
+      <animateMotion dur="1.2s" repeatCount="indefinite" rotate="auto">
+        <mpath href={`#${path}`} />
+      </animateMotion>
+    </circle>
+  );
 }
 
-/* navigation — no nav-btn IDs needed */
-function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));document.getElementById("screen-"+id).classList.add("active");window.scrollTo(0,0)}
-window.goHome=()=>show("home");
-window.goMeter=()=>{show("meter");loadMeterSel()};
-window.goAdmin=()=>{show("admin");loadAdmin()};
-window.goUSSD=()=>{resetU();show("ussd");setTimeout(()=>step("dial"),180)};
-
-/* ════════════════════ USSD ════════════════════ */
-let U={s:"idle",meter:"",amount:0,pin:"",ref:""};
-
-function resetU(){
-  U={s:"idle",meter:"",amount:0,pin:"",ref:""};
-  const sl=document.getElementById("syslog");if(sl)sl.innerHTML="";
-  const i=document.getElementById("uinput");if(i){i.value="";i.type="text";i.removeAttribute("maxLength");}
-  const sb=document.getElementById("usend");if(sb){sb.textContent="Send →";sb.onclick=uSend;sb.disabled=false;}
+// ── Network graph ───────────────────────────────────────────────────────────
+function NetworkGraph({ activeEdgeIdx }) {
+  const nodeMap = Object.fromEntries(NODES.map(n => [n.id, n]));
+  return (
+    <div style={{ position: "relative", width: "100%", height: 200 }}>
+      <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none"
+        style={{ position: "absolute", inset: 0 }}>
+        <defs>
+          {EDGES.map((e, i) => {
+            const a = nodeMap[e.from], b = nodeMap[e.to];
+            const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2 - 10;
+            return <path key={i} id={`edge-${i}`} d={`M${a.x} ${a.y} Q${mx} ${my} ${b.x} ${b.y}`} fill="none" />;
+          })}
+        </defs>
+        {EDGES.map((e, i) => {
+          const a = nodeMap[e.from], b = nodeMap[e.to];
+          const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2 - 10;
+          const active = activeEdgeIdx !== null && i <= activeEdgeIdx;
+          return (
+            <path key={i} d={`M${a.x} ${a.y} Q${mx} ${my} ${b.x} ${b.y}`} fill="none"
+              stroke={active ? "#00ff88" : "#1e3a2e"}
+              strokeWidth={active ? "0.8" : "0.5"}
+              strokeDasharray={active ? "none" : "2 2"}
+              style={{ transition: "stroke .4s, stroke-width .4s" }} />
+          );
+        })}
+        {EDGES.map((e, i) => (
+          <PacketDot key={i} path={`edge-${i}`} delay={i * 0.5}
+            active={activeEdgeIdx !== null && i <= activeEdgeIdx}
+            color={i === EDGES.length - 1 ? "#ffd700" : "#00ff88"} />
+        ))}
+      </svg>
+      {NODES.map(n => {
+        const isActive = activeEdgeIdx !== null &&
+          EDGES.slice(0, activeEdgeIdx + 1).some(e => e.to === n.id || e.from === n.id);
+        return (
+          <div key={n.id} style={{
+            position: "absolute", left: `${n.x}%`, top: `${n.y}%`,
+            transform: "translate(-50%,-50%)", textAlign: "center",
+          }}>
+            <div style={{
+              width: 34, height: 34, borderRadius: "50%",
+              background: isActive ? "rgba(0,255,136,0.14)" : "rgba(255,255,255,0.03)",
+              border: `1.5px solid ${isActive ? "#00ff88" : "#1e3a2e"}`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 15, margin: "0 auto 3px",
+              boxShadow: isActive ? "0 0 12px rgba(0,255,136,0.35)" : "none",
+              transition: "all .4s",
+            }}>{n.icon}</div>
+            <div style={{ fontFamily: "'Syne',sans-serif", fontSize: 7.5, fontWeight: 700,
+              color: isActive ? "#00ff88" : "#3a5a4a", whiteSpace: "nowrap" }}>{n.label}</div>
+            <div style={{ fontFamily: "'Fira Code',monospace", fontSize: 6, color: "#1e3a2a" }}>{n.sub}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
-function step(s){
-  U.s=s;
-  const body=document.getElementById("ubody");
-  const hint=document.getElementById("uhint");
-  const inp=document.getElementById("uinput");
-  const iw=document.getElementById("uinput-wrap");
-  const sb=document.getElementById("usend");
+// ── Phone ───────────────────────────────────────────────────────────────────
+function Phone({ step, onKey, meterNo, amount, pin }) {
+  const screenRef = useRef();
+  useEffect(() => {
+    if (screenRef.current) screenRef.current.scrollTop = screenRef.current.scrollHeight;
+  }, [step]);
 
-  inp.value="";inp.type="text";delete inp.maxLength;
-  sb.disabled=false;sb.textContent="Send →";sb.onclick=uSend;
-  iw.style.display="block";
+  function getScreen() {
+    if (step === "dial") return { lines: ["*312#"], type: "dial" };
+    if (step === "menu") return { lines: ["PowerDirect", "──────────────", "1. Buy Electricity", "2. Check Balance", "3. History", "4. Register Meter"], type: "menu" };
+    if (step === "meter") return { lines: ["Buy Electricity", "──────────────", "Enter Meter Number:"], type: "input", val: meterNo };
+    if (step === "amount") return { lines: ["Buy Electricity", "──────────────", "Enter amount (RWF):"], type: "input", val: amount };
+    if (step === "confirm") return {
+      lines: ["Confirm Payment", "──────────────",
+        `Meter: ${meterNo || METER.id}`,
+        `Amount: ${fmtRwf(amount || 5000)}`,
+        `Units: ~${((amount||5000)/450).toFixed(1)} kWh`,
+        "──────────────", "1. Confirm", "2. Cancel"],
+      type: "menu"
+    };
+    if (step === "pin") return { lines: ["Enter MoMo PIN:"], type: "input", val: "●".repeat(pin.length) };
+    if (step === "sending") return { lines: ["Processing…", "", "Do not close"], type: "wait" };
+    if (step === "done") return {
+      lines: ["✓ Payment OK!", "──────────────",
+        `Meter: ${meterNo || METER.id}`,
+        `Credited: ${fmtRwf(amount||5000)}`,
+        `(~${((amount||5000)/450).toFixed(1)} kWh)`,
+        "", "No token needed."],
+      type: "done"
+    };
+    return { lines: [], type: "" };
+  }
 
-  const L=lines=>{
-    const html=lines.map(l=>{
-      if(l[0]==="div") return`<div class="uline u-div">──────────────────────</div>`;
-      if(l[0]==="opt") return`<div class="uline u-opt">${l[1]}</div>`;
-      if(l[0]==="ok")  return`<div class="uline u-ok">${l[1]}</div>`;
-      if(l[0]==="title")return`<div class="uline u-title">${l[1]}</div>`;
-      if(l[0]==="num") return`<span class="u-num">${l[1]}</span>`;
-      return`<div class="uline u-text">${l[1]}</div>`;
-    }).join("");
-    return html+`<div class="u-input-row"><span class="u-gt">&gt;</span><span class="u-echo" id="uecho"></span><span class="u-cur"></span></div>`;
+  const { lines, type, val } = getScreen();
+
+  return (
+    <div style={{
+      width: 190, background: "linear-gradient(160deg,#181828,#0f0f18)",
+      borderRadius: 26, border: "2px solid #252540",
+      boxShadow: "0 20px 50px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.04)",
+      padding: "14px 12px 14px", display: "flex", flexDirection: "column",
+    }}>
+      <div style={{ width: 56, height: 7, borderRadius: 4, background: "#0a0a12", margin: "0 auto 11px", border: "1px solid #252540" }} />
+      <div ref={screenRef} style={{
+        background: "#05060e", borderRadius: 11, flex: 1, minHeight: 200,
+        padding: "11px 10px", fontFamily: "'Fira Code',monospace", fontSize: 9.5,
+        lineHeight: 1.75, overflowY: "auto",
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", color: "#2a4050", fontSize: 8, marginBottom: 8 }}>
+          <span>MTN RW</span><span>●●●●○ 4G</span>
+        </div>
+        <div style={{ color: "#ffd700", fontSize: 8.5, borderBottom: "1px solid #141e14", paddingBottom: 6, marginBottom: 8 }}>
+          *312# · PowerDirect
+        </div>
+
+        {type === "dial" ? (
+          <div style={{ textAlign: "center", paddingTop: 20 }}>
+            <div style={{ color: "#ffd700", fontSize: 22, letterSpacing: ".1em" }}>*312#</div>
+            <div style={{ color: "#3a5a4a", marginTop: 8, fontSize: 9 }}>Press Send to connect</div>
+          </div>
+        ) : type === "wait" ? (
+          <div style={{ textAlign: "center", paddingTop: 16 }}>
+            <div style={{ color: "#00ff88", fontSize: 20, animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</div>
+            <div style={{ color: "#3a5a4a", marginTop: 10, fontSize: 9 }}>Processing…</div>
+          </div>
+        ) : (
+          lines.map((l, i) => (
+            <div key={i} style={{
+              color: l.startsWith("✓") ? "#00ff88"
+                : l === lines[0] ? "#ffffff"
+                : l.startsWith("──") ? "#1a2a1a"
+                : l.match(/^[1-4]\./) ? "#00ff88"
+                : "#6a9a7a",
+              fontWeight: l === lines[0] ? 700 : 400,
+              fontSize: l === lines[0] ? 10 : 9.5,
+            }}>{l}</div>
+          ))
+        )}
+
+        {(type === "input") && (
+          <div style={{ marginTop: 7, color: "#00ff88" }}>
+            &gt; {val || ""}
+            <span style={{ display: "inline-block", width: 5, height: 11, background: "#00ff88", marginLeft: 2, verticalAlign: "middle", animation: "blink 1s step-end infinite" }} />
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
+        {["← Clear", "Send →"].map((k, i) => (
+          <button key={k} onClick={() => onKey(i === 0 ? "clear" : "send")} style={{
+            flex: 1, padding: "6px 0", borderRadius: 7, fontSize: 9.5, fontWeight: 700,
+            cursor: "pointer", transition: "all .15s",
+            background: i === 1 ? "rgba(0,255,136,.13)" : "rgba(255,255,255,.04)",
+            border: `1.5px solid ${i === 1 ? "#00ff88" : "#252540"}`,
+            color: i === 1 ? "#00ff88" : "#404060",
+            fontFamily: "'Fira Code',monospace",
+          }}>{k}</button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Smart Meter ─────────────────────────────────────────────────────────────
+function SmartMeter({ balance, credited, isUpdating }) {
+  const [disp, setDisp] = useState(balance);
+  const [flash, setFlash] = useState(false);
+
+  useEffect(() => {
+    if (!isUpdating) return;
+    let cur = balance;
+    const target = balance + credited;
+    const inc = (target - cur) / 40;
+    let i = 0;
+    const t = setInterval(() => {
+      i++; cur += inc;
+      setDisp(parseFloat(cur.toFixed(2)));
+      if (i >= 40) { clearInterval(t); setDisp(target); setFlash(true); }
+    }, 40);
+    return () => clearInterval(t);
+  }, [isUpdating]);
+
+  const rwf = Math.round(disp * 450);
+
+  return (
+    <div style={{
+      width: 210, background: "linear-gradient(160deg,#18120a,#0d0b05)",
+      borderRadius: 15, border: "2px solid #2e2208",
+      boxShadow: "0 20px 50px rgba(0,0,0,.8)",
+      padding: "18px 15px", fontFamily: "'Share Tech Mono',monospace",
+    }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 13 }}>
+        <div>
+          <div style={{ color: "#ffd700", fontSize: 9, letterSpacing: ".18em", fontFamily: "'Syne',sans-serif", fontWeight: 800 }}>EUCL SMART METER</div>
+          <div style={{ color: "#4a3a12", fontSize: 7.5, marginTop: 1 }}>AMI-FIBER · STS v2.1</div>
+        </div>
+        <div style={{
+          width: 9, height: 9, borderRadius: "50%",
+          background: isUpdating ? "#00ff88" : "#1a3018",
+          boxShadow: isUpdating ? "0 0 8px #00ff88" : "none",
+          transition: "all .3s",
+        }} />
+      </div>
+
+      <div style={{ background: "#080600", borderRadius: 8, border: "1px solid #221a00", padding: "11px 10px", marginBottom: 11, boxShadow: "inset 0 2px 8px rgba(0,0,0,.8)" }}>
+        <div style={{ color: "#4a3a12", fontSize: 7.5, marginBottom: 4 }}>AVAILABLE UNITS</div>
+        <div style={{
+          color: flash ? "#ffffff" : "#ffd700", fontSize: 30,
+          textShadow: `0 0 18px ${flash ? "#ffffff" : "#ffd700"}`,
+          transition: "all .3s", letterSpacing: ".04em",
+        }}>{disp.toFixed(2)}</div>
+        <div style={{ color: "#6a5818", fontSize: 9.5 }}>kWh</div>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7, marginBottom: 10 }}>
+        {[["EST. VALUE", fmtRwf(rwf)], ["TARIFF", "Cat A"], ["METER ID", METER.id], ["PHASE", "1-Phase"]].map(([l, v]) => (
+          <div key={l} style={{ background: "#080600", borderRadius: 6, border: "1px solid #1a1400", padding: "5px 7px" }}>
+            <div style={{ color: "#2e2208", fontSize: 6.5, letterSpacing: ".08em" }}>{l}</div>
+            <div style={{ color: "#b89028", fontSize: 8.5, marginTop: 2 }}>{v}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{
+        display: "flex", alignItems: "center", gap: 6,
+        background: isUpdating ? "rgba(0,255,136,.08)" : "#080600",
+        border: `1px solid ${isUpdating ? "#00ff88" : "#1a1400"}`,
+        borderRadius: 6, padding: "6px 9px", transition: "all .4s",
+      }}>
+        <div style={{
+          width: 6, height: 6, borderRadius: "50%",
+          background: isUpdating ? "#00ff88" : "#2e2208",
+          animation: isUpdating ? "pulse .8s infinite" : "none",
+        }} />
+        <div style={{ fontFamily: "'Fira Code',monospace", fontSize: 7.5, color: isUpdating ? "#00ff88" : "#2e2208" }}>
+          {isUpdating ? "RECEIVING CREDIT..." : "CONNECTED · FIBER"}
+        </div>
+      </div>
+
+      {flash && (
+        <div style={{ marginTop: 9, background: "rgba(0,255,136,.07)", border: "1px solid rgba(0,255,136,.18)", borderRadius: 6, padding: "6px 9px", animation: "fadeIn .4s ease" }}>
+          <div style={{ color: "#00ff88", fontSize: 8.5 }}>✓ DIRECT CREDIT RECEIVED</div>
+          <div style={{ color: "#3a6040", fontSize: 7.5, marginTop: 2 }}>+{credited.toFixed(1)} kWh · NO TOKEN REQUIRED</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Step bar ─────────────────────────────────────────────────────────────────
+function StepBar({ currentStep }) {
+  const idx = USSD_STEPS.findIndex(s => s.id === currentStep);
+  return (
+    <div style={{ display: "flex", alignItems: "center", overflowX: "auto", paddingBottom: 4 }}>
+      {USSD_STEPS.map((s, i) => {
+        const done = i < idx, active = i === idx;
+        return (
+          <div key={s.id} style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+            <div style={{
+              width: active ? 22 : 17, height: active ? 22 : 17, borderRadius: "50%",
+              background: done ? "#00ff88" : active ? "rgba(0,255,136,.18)" : "rgba(255,255,255,.04)",
+              border: `1.5px solid ${done ? "#00ff88" : active ? "#00ff88" : "#1e3a2e"}`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: done ? "#000" : active ? "#00ff88" : "#2a4a3a",
+              fontSize: 7.5, fontWeight: 700, transition: "all .3s",
+              boxShadow: active ? "0 0 10px rgba(0,255,136,.35)" : "none",
+              fontFamily: "'Fira Code',monospace",
+            }}>{done ? "✓" : i + 1}</div>
+            {i < USSD_STEPS.length - 1 && (
+              <div style={{ width: 18, height: 1, background: done ? "#00ff88" : "#1e3a2e", transition: "background .3s" }} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── System Log ───────────────────────────────────────────────────────────────
+function SysLog({ entries }) {
+  const ref = useRef();
+  useEffect(() => { if (ref.current) ref.current.scrollTop = ref.current.scrollHeight; }, [entries]);
+  return (
+    <div ref={ref} style={{
+      background: "#020604", border: "1px solid #0e1a0e", borderRadius: 10,
+      padding: "10px 12px", maxHeight: 90, overflowY: "auto",
+    }}>
+      {entries.length === 0
+        ? <div style={{ fontFamily: "'Fira Code',monospace", fontSize: 8.5, color: "#162216" }}>Waiting for session…</div>
+        : entries.map((e, i) => (
+          <div key={i} style={{ display: "flex", gap: 10, marginBottom: 2 }}>
+            <span style={{ fontFamily: "'Fira Code',monospace", fontSize: 7.5, color: "#162216", minWidth: 58 }}>{e.time}</span>
+            <span style={{ fontFamily: "'Fira Code',monospace", fontSize: 8.5, color: e.color }}>{e.msg}</span>
+          </div>
+        ))
+      }
+    </div>
+  );
+}
+
+// ── Main App ─────────────────────────────────────────────────────────────────
+function App() {
+  const [step, setStep] = useState("dial");
+  const [meterNo, setMeterNo] = useState("");
+  const [amount, setAmount] = useState("");
+  const [pin, setPin] = useState("");
+  const [activeEdge, setActiveEdge] = useState(null);
+  const [meterBalance, setMeterBalance] = useState(METER.balanceKwh);
+  const [creditedKwh, setCreditedKwh] = useState(0);
+  const [meterUpdating, setMeterUpdating] = useState(false);
+  const [logs, setLogs] = useState([]);
+
+  function addLog(msg, color = "#4a8a6a") {
+    const time = new Date().toLocaleTimeString("en-RW", { hour12: false });
+    setLogs(l => [...l.slice(-9), { time, msg, color }]);
+  }
+
+  function advance(input = "") {
+    if (step === "dial") {
+      addLog("USSD session initiated → *312#", "#ffd700");
+      setStep("menu");
+    } else if (step === "menu") {
+      if (input !== "1") { addLog("Returning to menu…"); return; }
+      addLog("Selected: Buy Electricity");
+      setStep("meter");
+    } else if (step === "meter") {
+      const m = meterNo.trim() || METER.id;
+      setMeterNo(m);
+      addLog(`Meter lookup: ${m}`, "#00ff88");
+      addLog(`→ Owner: ${METER.owner}`, "#00ff88");
+      setStep("amount");
+    } else if (step === "amount") {
+      const a = parseInt(amount) || 5000;
+      setAmount(String(a));
+      addLog(`Amount: ${fmtRwf(a)}`);
+      setStep("confirm");
+    } else if (step === "confirm") {
+      if (input !== "1") { setStep("menu"); return; }
+      addLog("Payment confirmed by user");
+      setStep("pin");
+    } else if (step === "pin") {
+      if (pin.length < 4) { addLog("PIN too short", "#ff6060"); return; }
+      addLog("PIN authenticated ✓", "#00ff88");
+      setStep("sending");
+      runPayment();
+    }
+  }
+
+  async function runPayment() {
+    const delays = [
+      [0,    0, "MoMo: Debiting account…",              "#ffd700"],
+      [700,  0, "MoMo: Debit confirmed ✓",              "#00ff88"],
+      [1100, 1, "Sending command to EUCL HES…",         "#ffd700"],
+      [1700, 2, "EUCL HES: Command received ✓",         "#00ff88"],
+      [2100, 3, "DLMS/COSEM packet → fiber node…",      "#ffd700"],
+      [2600, 4, "Fiber node: Routing to meter…",        "#ffd700"],
+      [3100, 4, `Meter ${METER.id}: Credit applied ✓`,  "#00ff88"],
+    ];
+    for (const [delay, edge, msg, color] of delays) {
+      await new Promise(r => setTimeout(r, delay));
+      if (edge !== undefined) setActiveEdge(edge);
+      addLog(msg, color);
+    }
+    const kh = parseFloat(((parseInt(amount) || 5000) / 450).toFixed(1));
+    setCreditedKwh(kh);
+    setMeterUpdating(true);
+    setTimeout(() => {
+      setMeterBalance(b => parseFloat((b + kh).toFixed(2)));
+      setMeterUpdating(false);
+      setStep("done");
+      addLog("━━ Transaction complete ━━", "#ffd700");
+    }, 3200);
+  }
+
+  function reset() {
+    setStep("dial"); setMeterNo(""); setAmount(""); setPin("");
+    setActiveEdge(null); setMeterUpdating(false);
+    setCreditedKwh(0); setMeterBalance(METER.balanceKwh); setLogs([]);
+  }
+
+  function handleKey(action) {
+    if (step === "dial") { advance(); return; }
+    if (action === "clear") {
+      if (step === "meter") setMeterNo(m => m.slice(0, -1));
+      else if (step === "amount") setAmount(a => a.slice(0, -1));
+      else if (step === "pin") setPin(p => p.slice(0, -1));
+      return;
+    }
+    advance(action === "send" ? "1" : "");
+  }
+
+  const inputStyle = {
+    width: "100%", padding: "9px 11px", borderRadius: 8,
+    background: "#0a1a0e", border: "1px solid #1a3a22",
+    color: "#00ff88", fontFamily: "'Fira Code',monospace",
+    fontSize: 12, boxSizing: "border-box",
+  };
+  const nextBtnStyle = {
+    width: "100%", marginTop: 7, padding: "9px 0", borderRadius: 8,
+    background: "rgba(0,255,136,.14)", border: "1px solid #00ff88",
+    color: "#00ff88", fontFamily: "'Syne',sans-serif",
+    fontSize: 11, fontWeight: 700, cursor: "pointer",
   };
 
-  if(s==="dial"){
-    body.innerHTML=L([["text","Dialling"],["num","*312#"],["text","Press Send to connect"]]);
-    inp.style.display="none";hint.textContent="Press Send to open menu";
-    log("Dialling *312#…","a");
-  }
-  else if(s==="menu"){
-    body.innerHTML=L([["title","PowerDirect"],["div"],["opt","1. Buy Electricity"],["opt","2. Check Balance"],["opt","3. My Transactions"],["opt","4. Exit"]]);
-    inp.style.display="block";inp.placeholder="1 / 2 / 3 / 4";hint.textContent="Select an option";
-    log("Session open","g");
-  }
-  else if(s==="buy_meter"){
-    body.innerHTML=L([["title","Buy Electricity"],["div"],["text","Enter Meter Number:"]]);
-    inp.style.display="block";inp.placeholder="e.g. 04-RWA-2847-K";hint.textContent="Press Send to use demo meter";
-  }
-  else if(s==="buy_amt"){
-    const m=DM[U.meter];
-    body.innerHTML=L([["title","Buy Electricity"],["div"],["text",`Meter: ${U.meter}`],["text",`Owner: ${m?m.owner:"—"}`],["text",`Balance: ${m?m.balance_kwh.toFixed(2)+" kWh":"—"}`],["div"],["text","Amount (RWF):"]]);
-    inp.style.display="block";inp.type="number";inp.placeholder="Min 500, Max 50,000";hint.textContent="Enter amount in Rwandan Francs";
-  }
-  else if(s==="buy_confirm"){
-    const kh=(U.amount/RATE).toFixed(1);
-    body.innerHTML=L([["title","Confirm Payment"],["div"],["text",`Meter  : ${U.meter}`],["text",`Amount : ${rwf(U.amount)}`],["text",`Units  : ~${kh} kWh`],["div"],["opt","1. Confirm"],["opt","2. Cancel"]]);
-    inp.style.display="block";inp.placeholder="1 or 2";hint.textContent="Type 1 to confirm";
-  }
-  else if(s==="buy_pin"){
-    body.innerHTML=L([["title","Confirm with MoMo PIN"],["div"],["text","Enter 4-digit PIN:"]]);
-    inp.style.display="block";inp.type="password";inp.maxLength=4;inp.placeholder="••••";hint.textContent="Demo: type any 4 digits";
-  }
-  else if(s==="processing"){
-    body.innerHTML=`<div class="pring-wrap"><div class="pring"></div><div class="uline u-text">Processing payment…</div><div class="uline" style="font-size:9px;color:#1c2535;margin-top:3px">Do not close this session</div></div>`;
-    iw.style.display="none";runPayment();
-  }
-  else if(s==="buy_done"){
-    const kh=(U.amount/RATE).toFixed(1);
-    body.innerHTML=L([["ok","Payment Successful!"],["div"],["text",`Meter : ${U.meter}`],["ok",`+${kh} kWh credited`],["text",`Ref   : ${U.ref}`],["div"],["ok","No token needed."]]);
-    iw.style.display="block";inp.style.display="none";
-    sb.textContent="↺ New session";sb.onclick=window.goUSSD;hint.textContent="Payment complete";
-  }
-  else if(s==="bal_meter"){
-    body.innerHTML=L([["title","Check Balance"],["div"],["text","Enter Meter Number:"]]);
-    inp.style.display="block";inp.placeholder="e.g. 04-RWA-2847-K";hint.textContent="Press Send for demo meter";
-  }
-  else if(s==="bal_show"){
-    const m=DM[U.meter];
-    const kh=m?m.balance_kwh.toFixed(2):"—";
-    const rv=m?rwf(m.balance_rwf):"—";
-    body.innerHTML=L([["title","Balance"],["div"],["text",`Meter  : ${U.meter}`],["text",`Owner  : ${m?m.owner:"Unknown"}`],["ok",`Units  : ${kh} kWh`],["ok",`Value  : ${rv}`],["div"],["opt","1. Top up now"],["opt","2. Back to menu"]]);
-    inp.style.display="block";inp.placeholder="1 or 2";hint.textContent="";
-    log(`Balance ${U.meter}: ${kh} kWh`,"g");
-  }
-  else if(s==="hist_meter"){
-    body.innerHTML=L([["title","My Transactions"],["div"],["text","Enter Meter Number:"]]);
-    inp.style.display="block";inp.placeholder="e.g. 04-RWA-2847-K";hint.textContent="Press Send for demo meter";
-  }
-  else if(s==="hist_show"){
-    const txns=DT.filter(t=>t.meter_id===U.meter).slice(0,4);
-    const rows=txns.length?txns.map(t=>`${tstr(t.created_at).slice(0,5)} · ${rwf(t.amount_rwf)} · ${parseFloat(t.kwh_credited).toFixed(1)}kWh`)
-      :["No transactions yet"];
-    body.innerHTML=L([["title",`History: ${U.meter}`],["div"],...rows.map(r=>["text",r]),["div"],["opt","1. Top up"],["opt","2. Menu"]]);
-    inp.style.display="block";inp.placeholder="1 or 2";hint.textContent=`${txns.length} record(s)`;
-    log(`History ${U.meter}: ${txns.length} records`,"g");
-  }
+  return (
+    <div style={{ minHeight: "100vh", background: "#060a07", color: "#fff", fontFamily: "'Syne',sans-serif", padding: "20px 16px" }}>
+
+      {/* Header */}
+      <div style={{ textAlign: "center", marginBottom: 22 }}>
+        <div style={{ display: "inline-block", background: "rgba(0,255,136,.07)", border: "1px solid rgba(0,255,136,.18)", borderRadius: 20, padding: "3px 12px", fontSize: 9.5, fontFamily: "'Fira Code',monospace", color: "#00ff88", letterSpacing: ".14em", marginBottom: 9 }}>
+          SIGNAL FLOW SIMULATION · v0.1
+        </div>
+        <h1 style={{ fontSize: 21, fontWeight: 800, margin: 0, background: "linear-gradient(90deg,#00ff88,#ffd700)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+          PowerDirect
+        </h1>
+        <p style={{ color: "#2a4a3a", fontSize: 10.5, margin: "4px 0 0", fontFamily: "'Fira Code',monospace" }}>
+          Direct meter credit · No token · USSD *312#
+        </p>
+      </div>
+
+      {/* Step bar */}
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
+        <StepBar currentStep={step} />
+      </div>
+
+      {/* Network graph */}
+      <div style={{ background: "rgba(255,255,255,.015)", borderRadius: 14, border: "1px solid #0e1e14", padding: "10px 8px", marginBottom: 18 }}>
+        <div style={{ fontFamily: "'Fira Code',monospace", fontSize: 8.5, color: "#1e3a2a", marginBottom: 4, textAlign: "center", letterSpacing: ".1em" }}>LIVE SIGNAL FLOW</div>
+        <NetworkGraph activeEdgeIdx={activeEdge} />
+      </div>
+
+      {/* Phone + Meter */}
+      <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap", marginBottom: 18 }}>
+
+        {/* Left — Phone + controls */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+          <Phone step={step} onKey={handleKey} meterNo={meterNo} amount={amount} pin={pin} />
+
+          <div style={{ width: 190 }}>
+            {step === "dial" && (
+              <button onClick={advance} style={{ ...nextBtnStyle, fontSize: 12, fontWeight: 800, boxShadow: "0 0 18px rgba(0,255,136,.12)" }}>
+                DIAL *312# →
+              </button>
+            )}
+            {step === "menu" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                {["1. Buy Electricity", "2. Check Balance", "3. History"].map((opt, i) => (
+                  <button key={opt} onClick={() => advance(String(i + 1))} style={{
+                    padding: "7px 11px", borderRadius: 7, cursor: "pointer", textAlign: "left",
+                    background: i === 0 ? "rgba(0,255,136,.11)" : "rgba(255,255,255,.03)",
+                    border: `1px solid ${i === 0 ? "#00ff88" : "#1a3a22"}`,
+                    color: i === 0 ? "#00ff88" : "#2a4a3a",
+                    fontFamily: "'Fira Code',monospace", fontSize: 9.5,
+                  }}>{opt}</button>
+                ))}
+              </div>
+            )}
+            {(step === "meter" || step === "amount" || step === "pin") && (
+              <div>
+                <div style={{ fontFamily: "'Fira Code',monospace", fontSize: 8.5, color: "#2a4a3a", marginBottom: 5, textAlign: "center" }}>
+                  {step === "meter" ? "Meter number (or press Next for demo)" : step === "amount" ? "Amount in RWF" : "4-digit MoMo PIN"}
+                </div>
+                <input
+                  type={step === "pin" ? "password" : step === "amount" ? "number" : "text"}
+                  placeholder={step === "meter" ? METER.id : step === "amount" ? "e.g. 5000" : "••••"}
+                  value={step === "meter" ? meterNo : step === "amount" ? amount : pin}
+                  maxLength={step === "pin" ? 4 : undefined}
+                  onChange={e => {
+                    if (step === "meter") setMeterNo(e.target.value);
+                    else if (step === "amount") setAmount(e.target.value.replace(/\D/g, ""));
+                    else setPin(e.target.value.replace(/\D/g, "").slice(0, 4));
+                  }}
+                  onKeyDown={e => e.key === "Enter" && advance()}
+                  style={inputStyle}
+                />
+                <button onClick={() => advance()} style={nextBtnStyle}>
+                  {step === "pin" ? "PAY NOW →" : "NEXT →"}
+                </button>
+              </div>
+            )}
+            {step === "confirm" && (
+              <div style={{ display: "flex", gap: 7 }}>
+                <button onClick={() => advance("1")} style={{ flex: 1, padding: "9px 0", borderRadius: 8, background: "rgba(0,255,136,.13)", border: "1px solid #00ff88", color: "#00ff88", fontFamily: "'Syne',sans-serif", fontSize: 10.5, fontWeight: 700, cursor: "pointer" }}>✓ CONFIRM</button>
+                <button onClick={reset} style={{ flex: 1, padding: "9px 0", borderRadius: 8, background: "rgba(255,60,60,.07)", border: "1px solid #3a1010", color: "#7a2020", fontFamily: "'Syne',sans-serif", fontSize: 10.5, fontWeight: 700, cursor: "pointer" }}>✗ CANCEL</button>
+              </div>
+            )}
+            {step === "done" && (
+              <button onClick={reset} style={{ ...nextBtnStyle, background: "rgba(255,215,0,.09)", borderColor: "#ffd700", color: "#ffd700" }}>
+                ↺ RUN AGAIN
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Right — Meter + info */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+          <SmartMeter balance={meterBalance} credited={creditedKwh} isUpdating={meterUpdating} />
+          <div style={{ width: 210, background: "rgba(255,255,255,.02)", border: "1px solid #0e1e0e", borderRadius: 10, padding: "10px 13px" }}>
+            <div style={{ fontFamily: "'Fira Code',monospace", fontSize: 7.5, color: "#1e3a2a", letterSpacing: ".1em", marginBottom: 8 }}>METER DETAILS</div>
+            {[["Owner", METER.owner], ["Location", METER.location], ["Tariff", METER.tariff], ["Rate", "450 RWF / kWh"]].map(([k, v]) => (
+              <div key={k} style={{ display: "flex", justifyContent: "space-between", marginBottom: 5, borderBottom: "1px solid #0e1a0e", paddingBottom: 4 }}>
+                <span style={{ fontFamily: "'Fira Code',monospace", fontSize: 7.5, color: "#1e3a2a" }}>{k}</span>
+                <span style={{ fontFamily: "'Fira Code',monospace", fontSize: 7.5, color: "#7aaa8a" }}>{v}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* System log */}
+      <div>
+        <div style={{ fontFamily: "'Fira Code',monospace", fontSize: 8.5, color: "#1e3a2a", letterSpacing: ".1em", marginBottom: 7 }}>SYSTEM LOG</div>
+        <SysLog entries={logs} />
+      </div>
+
+      <div style={{ textAlign: "center", marginTop: 18, fontFamily: "'Fira Code',monospace", fontSize: 7.5, color: "#101e10" }}>
+        PowerDirect Simulation · EUCL AMI Infrastructure · Kigali, Rwanda
+      </div>
+    </div>
+  );
 }
 
-window.uSend=function uSend(){
-  const v=document.getElementById("uinput").value.trim();
-  const s=U.s;
-  if(s==="dial"){step("menu");return;}
-  if(s==="menu"){
-    if(v==="2"){step("bal_meter");return;}
-    if(v==="3"){step("hist_meter");return;}
-    if(v==="4"){window.goHome();return;}
-    step("buy_meter");return;
-  }
-  if(s==="buy_meter"){
-    U.meter=v||SEED[0].id;
-    if(DEMO&&!DM[U.meter]){toast("Meter not found, using demo","err");U.meter=SEED[0].id;}
-    log("Meter: "+U.meter,"a");log("Owner: "+(DM[U.meter]?.owner||"?"),"g");
-    step("buy_amt");return;
-  }
-  if(s==="buy_amt"){
-    const a=parseInt(v)||0;
-    if(a<500||a>50000){toast("Enter 500 – 50,000 RWF","err");return;}
-    U.amount=a;step("buy_confirm");return;
-  }
-  if(s==="buy_confirm"){
-    if(v==="2"||!v){step("menu");return;}
-    step("buy_pin");return;
-  }
-  if(s==="buy_pin"){
-    if(v.length<4){toast("PIN must be 4 digits","err");return;}
-    U.pin=v;log("PIN authenticated ✓","g");step("processing");return;
-  }
-  if(s==="bal_meter"){
-    U.meter=v||SEED[0].id;
-    if(DEMO&&!DM[U.meter]){U.meter=SEED[0].id;}
-    step("bal_show");return;
-  }
-  if(s==="bal_show"){if(v==="1"){step("buy_amt");return;}step("menu");return;}
-  if(s==="hist_meter"){
-    U.meter=v||SEED[0].id;
-    if(DEMO&&!DM[U.meter]){U.meter=SEED[0].id;}
-    step("hist_show");return;
-  }
-  if(s==="hist_show"){if(v==="1"){step("buy_amt");return;}step("menu");return;}
-};
-
-window.uClear=function(){const i=document.getElementById("uinput");i.value=i.value.slice(0,-1);i.dispatchEvent(new Event("input"));i.focus()};
-
-async function runPayment(){
-  const{meter,amount}=U;
-  const kh=parseFloat((amount/RATE).toFixed(2));
-  const r=mkref();U.ref=r;
-  await sleep(600);log("MoMo: debiting account…","a");
-  /* 🔧 MTN MoMo API: POST /collection/v1_0/requesttopay */
-  await sleep(900);log("MoMo: debit confirmed ✓","g");
-  await sleep(400);log("Sending command → EUCL HES…","a");
-  /* 🔧 EUCL HES API: POST /api/v1/meters/{id}/credit */
-  await sleep(600);log("DLMS/COSEM → fiber node…","a");
-  await sleep(500);log(`Meter ${meter}: credit applied ✓`,"g");
-
-  if(DEMO){
-    if(DM[meter]){DM[meter].balance_kwh=parseFloat((DM[meter].balance_kwh+kh).toFixed(2));DM[meter].balance_rwf=Math.round(DM[meter].balance_kwh*RATE);}
-    DT.unshift({meter_id:meter,amount_rwf:amount,kwh_credited:kh,ref:r,status:"success",phone:"078XXXXXX",created_at:new Date().toISOString()});
-  } else {
-    const mref=doc(db,CM,meter);const snap=await getDoc(mref);
-    if(snap.exists()){const d=snap.data();await updateDoc(mref,{balance_kwh:parseFloat(((d.balance_kwh||0)+kh).toFixed(2)),balance_rwf:Math.round(((d.balance_kwh||0)+kh)*RATE),last_updated:serverTimestamp()});}
-    await addDoc(collection(db,CT),{meter_id:meter,amount_rwf:amount,kwh_credited:kh,ref:r,status:"success",phone:"078XXXXXX",created_at:serverTimestamp()});
-  }
-  toast("✓ "+rwf(amount)+" credited to "+meter);
-  animateMeter(meter,kh);
-  log("━━ complete · no token used ━━","g");
-  step("buy_done");
-}
-
-/* ════════════════════ METER VIEW ════════════════════ */
-window.loadMeterSel=async function(){
-  const sel=document.getElementById("msel");
-  const meters=DEMO?Object.values(DM):await getDocs(collection(db,CM)).then(s=>s.docs.map(d=>({id:d.id,...d.data()})));
-  if(!meters.length){sel.innerHTML='<option value="">No meters – Admin → Seed demo data</option>';return;}
-  sel.innerHTML=meters.map(m=>`<option value="${m.id}">${m.id} — ${m.owner}</option>`).join("");
-  loadMeterView();
-};
-
-window.loadMeterView=function(){
-  const id=document.getElementById("msel").value;if(!id)return;
-  if(DEMO){renderMeter(DM[id]);loadMTxns(id);}
-  else{onSnapshot(doc(db,CM,id),snap=>{if(snap.exists())renderMeter({id:snap.id,...snap.data()});});loadMTxns(id);}
-};
-
-function renderMeter(m){
-  if(!m)return;
-  const kh=parseFloat(m.balance_kwh||0);
-  document.getElementById("mkwh").textContent=kh.toFixed(2);
-  document.getElementById("mid").textContent=m.id;
-  document.getElementById("mrwf").textContent=rwf(Math.round(kh*RATE));
-  document.getElementById("mowner").textContent=m.owner||"—";
-  document.getElementById("mloc").textContent=m.location||"—";
-  const dot=document.getElementById("mldot");dot.classList.remove("off");
-  document.getElementById("mlabel").textContent="online";
-}
-
-async function loadMTxns(id){
-  let txns=DEMO?DT.filter(t=>t.meter_id===id).slice(0,10)
-    :await getDocs(query(collection(db,CT),where("meter_id","==",id),orderBy("created_at","desc"),limit(10))).then(s=>s.docs.map(d=>d.data()));
-  const tb=document.getElementById("mtx");
-  if(!txns.length){tb.innerHTML='<tr><td colspan="5" class="emp">No transactions yet</td></tr>';return;}
-  tb.innerHTML=txns.map(t=>`<tr>
-    <td class="mono dim">${tstr(t.created_at)}</td>
-    <td style="font-weight:600;color:var(--primary)">${rwf(t.amount_rwf)}</td>
-    <td class="mono">${parseFloat(t.kwh_credited).toFixed(2)}</td>
-    <td class="mono dim">${t.ref}</td>
-    <td><span class="badge bg-green">${t.status}</span></td>
-  </tr>`).join("");
-}
-
-function animateMeter(meterId,kh){
-  const scr=document.getElementById("screen-meter");
-  if(!scr.classList.contains("active"))return;
-  if(document.getElementById("msel").value!==meterId)return;
-  const disp=document.getElementById("mkwh");
-  const foot=document.getElementById("mfoot");const ftxt=document.getElementById("mftxt");
-  const badge=document.getElementById("mcredit");
-  foot.className="mfoot rx";ftxt.textContent="RECEIVING CREDIT…";
-  const old=parseFloat(disp.textContent)||0;
-  const target=DM[meterId]?.balance_kwh||old+kh;
-  let cur=old,steps=40,i=0,inc=(target-old)/steps;
-  const t=setInterval(()=>{cur+=inc;i++;disp.textContent=cur.toFixed(2);disp.style.color="#ffffff";
-    if(i>=steps){clearInterval(t);disp.textContent=target.toFixed(2);disp.style.color="#a8e6a0";
-      foot.className="mfoot ok";ftxt.textContent="CONNECTED · FIBER";
-      document.getElementById("mrwf").textContent=rwf(Math.round(target*RATE));
-      badge.style.display="block";badge.className="mcredit";
-      badge.innerHTML=`✓ DIRECT CREDIT RECEIVED &nbsp;·&nbsp; +${kh.toFixed(2)} kWh &nbsp;·&nbsp; NO TOKEN REQUIRED`;
-      loadMTxns(meterId);}
-  },40);
-}
-
-/* ════════════════════ ADMIN ════════════════════ */
-window.seedMeters=async function(){
-  if(DEMO){toast("Demo data ready ✓");loadAdmin();return;}
-  for(const m of SEED)await setDoc(doc(db,CM,m.id),{...m,balance_rwf:Math.round(m.balance_kwh*RATE),connected:true,last_updated:serverTimestamp()});
-  toast("5 meters seeded ✓");loadAdmin();
-};
-
-async function loadAdmin(){
-  const meters=DEMO?Object.values(DM):await getDocs(collection(db,CM)).then(s=>s.docs.map(d=>({id:d.id,...d.data()})));
-  const txns=DEMO?[...DT]:await getDocs(query(collection(db,CT),orderBy("created_at","desc"),limit(50))).then(s=>s.docs.map(d=>d.data()));
-  const vol=txns.reduce((s,t)=>s+(t.amount_rwf||0),0);
-  const ok=txns.filter(t=>t.status==="success").length;
-  document.getElementById("sm").textContent=meters.length;
-  document.getElementById("stx").textContent=txns.length;
-  document.getElementById("sv").textContent=vol?(vol/1000).toFixed(0)+"K":"0";
-  document.getElementById("sr").textContent=txns.length?Math.round(ok/txns.length*100)+"%":"—";
-
-  const mb=document.getElementById("atbl");
-  mb.innerHTML=!meters.length?'<tr><td colspan="6" class="emp">No meters — click "Seed demo data"</td></tr>'
-    :meters.map(m=>`<tr>
-      <td><span class="chip">${m.id}</span></td>
-      <td style="font-weight:500">${m.owner||"—"}</td>
-      <td class="dim">${m.location||"—"}</td>
-      <td class="mono" style="color:var(--primary);font-weight:600">${parseFloat(m.balance_kwh||0).toFixed(2)}</td>
-      <td class="mono">${rwf(m.balance_rwf||0)}</td>
-      <td><span class="badge ${m.connected?"bg-green":"bg-gray"}">${m.connected?"online":"offline"}</span></td>
-    </tr>`).join("");
-
-  const tb=document.getElementById("ttbl");
-  tb.innerHTML=!txns.length?'<tr><td colspan="7" class="emp">No transactions yet — run a USSD payment first</td></tr>'
-    :txns.map(t=>`<tr>
-      <td class="mono dim">${tstr(t.created_at)}</td>
-      <td><span class="chip">${t.meter_id}</span></td>
-      <td class="mono dim">${t.phone||"—"}</td>
-      <td style="font-weight:600;color:var(--primary)">${rwf(t.amount_rwf||0)}</td>
-      <td class="mono">${parseFloat(t.kwh_credited||0).toFixed(2)}</td>
-      <td class="mono dim">${t.ref||"—"}</td>
-      <td><span class="badge bg-green">${t.status}</span></td>
-    </tr>`).join("");
-}
-
-/* boot */
-window.addEventListener("load",()=>{
-  setTimeout(()=>{
-    document.getElementById("loader").style.display="none";
-    document.getElementById("app").style.display="block";
-    if(DEMO)toast("Demo mode active");
-  },1300);
-});
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
 </script>
 </body>
 </html>
